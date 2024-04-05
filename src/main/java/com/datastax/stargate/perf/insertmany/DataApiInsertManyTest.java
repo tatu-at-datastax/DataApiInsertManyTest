@@ -2,6 +2,7 @@ package com.datastax.stargate.perf.insertmany;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
@@ -45,13 +46,9 @@ public class DataApiInsertManyTest implements Callable<Integer>
 			description = "Astra env (PROD [default], DEV, TEST, LOCAL)")
 	private DataApiEnv env = DataApiEnv.PROD;
 
-	@Option(names = {"-r", "--db-region"}, required=false,
-			description = "Database region (like 'us-east1')")
-	private String dbRegion = "us-east1";
-
-	@Option(names = {"-k", "--keyspace"}, required=false,
-			description = "Keyspace (like 'ks'; default 'default_keyspace')")
-	private String keyspace = "default_keyspace";
+	@Option(names = {"-n", "--namespace"}, required=false,
+			description = "Namespace (like 'ks')")
+	private String namespace = null;
 
 	
 	@Override
@@ -73,7 +70,6 @@ public class DataApiInsertManyTest implements Callable<Integer>
 				DataAPIOptions.builder()
 				.withDestination(env.destination())
 				.build());
-		client.getDatabase(astraToken);
 		System.out.println(" created");
 
 		System.out.printf("Connecting to database '%s' (env '%s')...",
@@ -81,7 +77,11 @@ public class DataApiInsertManyTest implements Callable<Integer>
 		Database db;
 
 		try {
-			db = client.getDatabase(dbId);
+			if (namespace == null || namespace.isEmpty()) {
+				db = client.getDatabase(dbId);
+			} else {
+				db = client.getDatabase(dbId, namespace);
+			}
 		} catch (DatabaseNotFoundException dbNfe) {
 			System.err.printf(" FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
 					dbNfe.getMessage());
@@ -89,8 +89,18 @@ public class DataApiInsertManyTest implements Callable<Integer>
 		}
 		System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
 
-		System.out.printf("Collections in the Database/namespace: ");
-		System.out.println(db.listCollectionNames().toList());
+		System.out.printf("Fetch Collections in the Database: ");
+
+		Stream<String> collectionNames;
+
+		try {
+			collectionNames	= db.listCollectionNames();
+			System.out.println(collectionNames.toList());
+		} catch (Exception e) {
+			System.err.printf(" FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+					e.getMessage());
+			return 3;
+		}
 
 		System.out.println("DONE!");
 		
