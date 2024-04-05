@@ -19,6 +19,13 @@
 # Emacs
 *~
 
+# IDEA
+.idea
+*.iml
+*.ipr
+*.iws
+/target
+
 # Package Files #
 *.jar
 *.war
