@@ -50,6 +50,11 @@ public class DataApiInsertManyTest implements Callable<Integer>
             description = "Namespace (like 'ks')")
     private String namespace = null;
 
+    @Option(names = {"-c", "--collection"}, required=false,
+            defaultValue = "insert_many_test",
+            description = "Collection name (default: 'insert_many_test')")
+    private String collectionName;
+
     @Option(names = {"-v", "--vector"}, required=false,
             description = "Vector size; 0 to disable (default: 1536)")
     private int vectorLength = 1536;
@@ -87,13 +92,13 @@ public class DataApiInsertManyTest implements Callable<Integer>
                 db = client.getDatabase(dbId, namespace);
             }
         } catch (DatabaseNotFoundException dbNfe) {
-            System.err.printf(" FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
                     dbNfe.getMessage());
             return 3;
         }
         System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
 
-        System.out.printf("Fetch Collections in the Database: ");
+        System.out.printf("Fetch names of existing Collections in the database: ");
 
         Stream<String> collectionNames;
 
@@ -101,11 +106,22 @@ public class DataApiInsertManyTest implements Callable<Integer>
             collectionNames	= db.listCollectionNames();
             System.out.println(collectionNames.toList());
         } catch (Exception e) {
-            System.err.printf(" FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
                     e.getMessage());
             return 3;
         }
 
+        System.out.printf("Initialize test client (collection '%s')\n", collectionName);
+        CollectionTestClient testClient = new CollectionTestClient(db, collectionName,
+                vectorLength);
+        try {
+            testClient.initialize();
+        } catch (Exception e) {
+            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+                    e.getMessage());
+            return 3;
+        }
+        
         System.out.println("DONE!");
 
         return 0;
