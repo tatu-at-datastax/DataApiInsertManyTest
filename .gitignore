@@ -2,6 +2,9 @@
 *.class
 *.bak
 
+# Project-specific
+setup-keys.sh
+
 # Log file
 *.log
 
