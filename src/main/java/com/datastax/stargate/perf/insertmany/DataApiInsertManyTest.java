@@ -23,7 +23,7 @@ public class DataApiInsertManyTest implements Callable<Integer>
 		
         private final DataAPIOptions.DataAPIDestination destination;
 
-        private DataApiEnv(DataAPIOptions.DataAPIDestination d) {
+        DataApiEnv(DataAPIOptions.DataAPIDestination d) {
             destination = d;
         }
 
@@ -31,33 +31,33 @@ public class DataApiInsertManyTest implements Callable<Integer>
             return destination;
         }
     }
-	
+
     private final static String TOKEN_PREFIX = "AstraCS:";
 
     @Option(names = {"-t", "--token"}, required=true,
             description = "Astra Token (starts with 'AstraCS:')")
-    private String astraToken;
+    String astraToken;
 
     @Option(names = {"-d", "--db", "--db-id"}, required=true,
             description = "Database ID (UUID)")
-    private String dbIdAsString;
+    String dbIdAsString;
 
     @Option(names = {"-e", "--env"}, required=false,
             description = "Astra env (PROD [default], DEV, TEST, LOCAL)")
-    private DataApiEnv env = DataApiEnv.PROD;
+    DataApiEnv env = DataApiEnv.PROD;
 
     @Option(names = {"-n", "--namespace"}, required=false,
             description = "Namespace (like 'ks')")
-    private String namespace = null;
+    String namespace = null;
 
     @Option(names = {"-c", "--collection"}, required=false,
             defaultValue = "insert_many_test",
             description = "Collection name (default: 'insert_many_test')")
-    private String collectionName;
+    String collectionName;
 
     @Option(names = {"-v", "--vector"}, required=false,
             description = "Vector size; 0 to disable (default: 1536)")
-    private int vectorLength = 1536;
+    int vectorLength = 1536;
     
 
     @Override
