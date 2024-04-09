@@ -12,6 +12,7 @@ import com.datastax.astra.client.DataAPIOptions;
 import com.datastax.astra.client.Database;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 
+@CommandLine.Command(name = "DataApiInsertManyTest", mixinStandardHelpOptions=true)
 public class DataApiInsertManyTest implements Callable<Integer>
 {
     enum DataApiEnv {
@@ -42,23 +43,26 @@ public class DataApiInsertManyTest implements Callable<Integer>
             description = "Database ID (UUID)")
     String dbIdAsString;
 
-    @Option(names = {"-e", "--env"}, required=false,
+    @Option(names = {"-e", "--env"},
             description = "Astra env (PROD [default], DEV, TEST, LOCAL)")
     DataApiEnv env = DataApiEnv.PROD;
 
-    @Option(names = {"-n", "--namespace"}, required=false,
+    @Option(names = {"-n", "--namespace"},
             description = "Namespace (like 'ks')")
     String namespace = null;
 
-    @Option(names = {"-c", "--collection"}, required=false,
+    @Option(names = {"-c", "--collection"},
             defaultValue = "insert_many_test",
             description = "Collection name (default: 'insert_many_test')")
     String collectionName;
 
-    @Option(names = {"-v", "--vector"}, required=false,
+    @Option(names = {"-v", "--vector"},
             description = "Vector size; 0 to disable (default: 1536)")
     int vectorLength = 1536;
-    
+
+    @Option(names = "--skip-init", arity="0",
+          description = "Skip initialization (use existing collection)")
+    boolean skipInit = false;
 
     @Override
     public Integer call() throws Exception {
@@ -111,11 +115,10 @@ public class DataApiInsertManyTest implements Callable<Integer>
             return 3;
         }
 
-        System.out.printf("Initialize test client (collection '%s')\n", collectionName);
         CollectionTestClient testClient = new CollectionTestClient(db, collectionName,
                 vectorLength);
         try {
-            testClient.initialize();
+            testClient.initialize(skipInit);
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
                     e.getMessage());
