@@ -6,12 +6,11 @@ import java.util.List;
 public class CollectionItemGenerator {
     private final CollectionItemIdGenerator idGenerator;
 
-    private final VectorGenerator vectorGenerator;
+    private final int vectorLength;
 
     public CollectionItemGenerator(CollectionItemIdGenerator idGenerator, int vectorLength) {
         this.idGenerator = idGenerator;
-        // Vector generation is optional
-        vectorGenerator = (vectorLength > 1) ? new VectorGenerator(vectorLength) : null;
+        this.vectorLength = vectorLength;
     }
 
     public CollectionItem generateSingle() {
@@ -30,7 +29,6 @@ public class CollectionItemGenerator {
 
     private CollectionItem _generate() {
         final CollectionItemId itemId = idGenerator.nextId();
-        return new CollectionItem(itemId,
-                (vectorGenerator == null) ? null : vectorGenerator.generate(itemId));
+        return CollectionItem.create(itemId, vectorLength);
     }
 }

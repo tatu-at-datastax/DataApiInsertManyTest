@@ -36,6 +36,7 @@ public class CollectionItemIdGenerator {
         } else {
             --cycle;
         }
+        step = 0;
         return this;
     }
 

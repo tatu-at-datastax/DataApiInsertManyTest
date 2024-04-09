@@ -5,6 +5,9 @@ import com.datastax.astra.client.Database;
 import com.datastax.astra.client.model.DeleteResult;
 import com.datastax.astra.client.model.Document;
 import com.datastax.astra.client.model.SimilarityMetric;
+import com.datastax.stargate.perf.insertmany.entity.CollectionItem;
+import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
+import com.datastax.stargate.perf.insertmany.entity.CollectionItemIdGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 
 /**
@@ -12,6 +15,12 @@ import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
  */
 public class CollectionTestClient
 {
+    final private static int VALIDATE_SINGLE_ITEMS_TO_INSERT = 10;
+
+    final private static int VALIDATE_BATCHES_TO_INSERT = 10;
+
+    final private static int VALIDATE_BATCH_SIZE = 10;
+
     private final Database db;
     private final String collectionName;
     private final int vectorSize;
@@ -58,9 +67,8 @@ public class CollectionTestClient
             coll = (vectorSize > 0)
                     ? db.createCollection(collectionName, vectorSize, SimilarityMetric.COSINE)
                     : db.createCollection(collectionName);
-            long elapsedMsecs = System.currentTimeMillis() - start;
-            System.out.printf("created (in %.2f sec)); options = %s\n",
-                    elapsedMsecs / 1000.0,
+            System.out.printf("created (in %s)); options = %s\n",
+                    _secs(System.currentTimeMillis() - start),
                     coll.getDefinition().getOptions());
         }
         itemCollection = new ItemCollection(collectionName, coll, vectorSize);
@@ -74,6 +82,23 @@ public class CollectionTestClient
      * all Items before returning.
      */
     public void validate() {
+        CollectionItemIdGenerator idGenerator = CollectionItemIdGenerator.decreasingCycleGenerator(0);
+        CollectionItemGenerator itemGen = new CollectionItemGenerator(idGenerator, vectorSize);
+
+        System.out.printf("  will insert %d documents, one by one:\n", VALIDATE_SINGLE_ITEMS_TO_INSERT);
+        for (int i = 0; i < VALIDATE_SINGLE_ITEMS_TO_INSERT; ++i) {
+            final long start = System.currentTimeMillis();
+            CollectionItem item = itemGen.generateSingle();
+            itemCollection.insertItem(item);
+            System.out.printf(" created #%d: %s (in %s)\n",
+                    i, item.idAsString(), _secs(System.currentTimeMillis() - start));
+            // TODO: validate
+        }
+
         System.err.println("Not implemented yet!");
+    }
+
+    private static String _secs(long msecs) {
+        return "%.2f sec".formatted(msecs / 1000.0);
     }
 }
