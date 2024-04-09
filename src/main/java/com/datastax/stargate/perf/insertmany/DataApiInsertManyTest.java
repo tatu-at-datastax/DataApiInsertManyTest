@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
+import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -117,6 +118,7 @@ public class DataApiInsertManyTest implements Callable<Integer>
 
         CollectionTestClient testClient = new CollectionTestClient(db, collectionName,
                 vectorLength);
+        System.out.printf("Initialize test client (collection '%s'):\n", collectionName);
         try {
             testClient.initialize(skipInit);
         } catch (Exception e) {
@@ -124,9 +126,18 @@ public class DataApiInsertManyTest implements Callable<Integer>
                     e.getMessage());
             return 3;
         }
-        
-        System.out.println("DONE!");
+        System.out.printf("Ok: Initialization of '%s' successful.\n", collectionName);
+        System.out.printf("Validate that inserts to '%s' work.\n", collectionName);
+        try {
+            testClient.validate();
+        } catch (Exception e) {
+            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+                    e.getMessage());
+            return 4;
+        }
+        System.out.printf("Ok: Validation of '%s' successful.\n", collectionName);
 
+        System.out.println("Done.");
         return 0;
     }
 

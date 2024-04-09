@@ -1,13 +1,11 @@
 package com.datastax.stargate.perf.insertmany;
 
-import java.time.Duration;
-import java.time.Instant;
-
 import com.datastax.astra.client.Collection;
 import com.datastax.astra.client.Database;
 import com.datastax.astra.client.model.DeleteResult;
 import com.datastax.astra.client.model.Document;
 import com.datastax.astra.client.model.SimilarityMetric;
+import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 
 /**
  * Wrapper around access to test Collections for Data API
@@ -18,6 +16,8 @@ public class CollectionTestClient
     private final String collectionName;
     private final int vectorSize;
 
+    private ItemCollection itemCollection;
+
     public CollectionTestClient(Database db, String collectionName, int vectorSize) {
         this.db = db;
         this.collectionName = collectionName;
@@ -25,12 +25,11 @@ public class CollectionTestClient
     }
 
     /**
-     * Method that will (re)create Collection as necessary
+     * Method that will (re)create Collection as necessary; clear (if not deleted).
+     * Fails with exception if there are problems with collection access.
      */
-    public Collection<Document> initialize(boolean skipCollectionRecreate) throws Exception
+    public void initialize(boolean skipCollectionRecreate) throws Exception
     {
-        System.out.printf("Initialize test client (collection '%s'):\n", collectionName);
-
         System.out.printf("  checking if collection '%s' exists: ", collectionName);
         Collection<Document> coll = null;
 
@@ -63,13 +62,18 @@ public class CollectionTestClient
             System.out.printf("created (in %.2f sec)); options = %s\n",
                     elapsedMsecs / 1000.0,
                     coll.getDefinition().getOptions());
-
-            // And let's verify Collection does exist; do by checking it's empty
-            long count = coll.countDocuments(10);
-            if (count > 0) {
-                throw new IllegalStateException("Collection '" + count + "' not empty; has " + count + " documents");
-            }
         }
-        return coll;
+        itemCollection = new ItemCollection(collectionName, coll, vectorSize);
+        // And let's verify Collection does exist; do by checking it's empty
+        itemCollection.validateIsEmpty();
+    }
+
+    /**
+     * Method to call after {@link #initialize} to validate that Items can be inserted;
+     * first individually, then in bulk; verifying each insertion and finally deleting
+     * all Items before returning.
+     */
+    public void validate() {
+        System.err.println("Not implemented yet!");
     }
 }
