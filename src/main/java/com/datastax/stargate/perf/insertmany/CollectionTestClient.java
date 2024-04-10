@@ -112,7 +112,7 @@ public class CollectionTestClient
             final long start = System.currentTimeMillis();
             List<CollectionItem> items = itemGen.generate(VALIDATE_BATCH_SIZE);
             itemCollection.insertItems(items);
-            System.out.printf("    inserted Batch #%d/%d (in %s).",
+            System.out.printf("    inserted Batch #%d/%d (in %s)",
                     i+1, VALIDATE_BATCHES_TO_INSERT,
                     _secs(System.currentTimeMillis() - start));
             // Validate one by one
