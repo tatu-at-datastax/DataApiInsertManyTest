@@ -3,7 +3,10 @@ package com.datastax.stargate.perf.insertmany.entity;
 import com.datastax.astra.client.Collection;
 import com.datastax.astra.client.exception.TooManyDocumentsToCountException;
 import com.datastax.astra.client.model.Document;
+import com.datastax.astra.client.model.Filter;
 import com.datastax.astra.client.model.InsertOneResult;
+
+import java.util.Optional;
 
 /**
  * Wrapper around a Collection of Documents.
@@ -31,15 +34,10 @@ public record ItemCollection(String name, Collection<Document> collection, int v
         }
     }
 
-    /*
     public CollectionItem findItem(String idAsSring) {
-        Document doc = collection.getDocument(idAsSring);
-        if (doc == null) {
-            return null;
-        }
+        Optional<Document> doc = collection.findOne(Filter.findById(idAsSring));
         return CollectionItem.fromDocument(doc);
     }
-    */
 
     private static String _str(Object ob) {
         if (ob == null) {

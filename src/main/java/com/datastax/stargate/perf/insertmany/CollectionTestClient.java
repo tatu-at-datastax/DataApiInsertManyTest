@@ -90,15 +90,29 @@ public class CollectionTestClient
             final long start = System.currentTimeMillis();
             CollectionItem item = itemGen.generateSingle();
             itemCollection.insertItem(item);
-            System.out.printf(" created #%d: %s (in %s)\n",
+            System.out.printf("    created #%d: %s (in %s)",
                     i, item.idAsString(), _secs(System.currentTimeMillis() - start));
-            // TODO: validate
+            // fetch to validate
+            CollectionItem result = itemCollection.findItem(item.idAsString());
+            verifyItem(item, result);
+            System.out.println("(verified: OK)");
         }
 
+        System.out.printf("  will now insert %d batches of %d documents:\n",
+                VALIDATE_BATCHES_TO_INSERT, VALIDATE_BATCH_SIZE);
         System.err.println("Not implemented yet!");
     }
 
+    private static void verifyItem(CollectionItem expected, CollectionItem actual) {
+        if (actual == null) {
+            throw new IllegalStateException("Failed to find inserted document with key '"
+                    +expected.idAsString()+"'");
+        }
+        // Otherwise verify fields.
+        CollectionItem.verifySimilarity(expected, actual);
+    }
+
     private static String _secs(long msecs) {
-        return "%.2f sec".formatted(msecs / 1000.0);
+        return "%.3f sec".formatted(msecs / 1000.0);
     }
 }
