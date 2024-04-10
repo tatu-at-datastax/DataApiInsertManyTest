@@ -1,5 +1,7 @@
 package com.datastax.stargate.perf.insertmany;
 
+import java.util.List;
+
 import com.datastax.astra.client.Collection;
 import com.datastax.astra.client.Database;
 import com.datastax.astra.client.model.DeleteResult;
@@ -15,22 +17,25 @@ import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
  */
 public class CollectionTestClient
 {
-    final private static int VALIDATE_SINGLE_ITEMS_TO_INSERT = 10;
+    final private static int VALIDATE_SINGLE_ITEMS_TO_INSERT = 8;
 
-    final private static int VALIDATE_BATCHES_TO_INSERT = 10;
+    final private static int VALIDATE_BATCHES_TO_INSERT = 5;
 
     final private static int VALIDATE_BATCH_SIZE = 10;
 
     private final Database db;
     private final String collectionName;
     private final int vectorSize;
+    private final boolean orderedInserts;
 
     private ItemCollection itemCollection;
 
-    public CollectionTestClient(Database db, String collectionName, int vectorSize) {
+    public CollectionTestClient(Database db, String collectionName,
+                                int vectorSize, boolean orderedInserts) {
         this.db = db;
         this.collectionName = collectionName;
         this.vectorSize = vectorSize;
+        this.orderedInserts = orderedInserts;
     }
 
     /**
@@ -71,7 +76,7 @@ public class CollectionTestClient
                     _secs(System.currentTimeMillis() - start),
                     coll.getDefinition().getOptions());
         }
-        itemCollection = new ItemCollection(collectionName, coll, vectorSize);
+        itemCollection = new ItemCollection(collectionName, coll, vectorSize, orderedInserts);
         // And let's verify Collection does exist; do by checking it's empty
         itemCollection.validateIsEmpty();
     }
@@ -90,17 +95,51 @@ public class CollectionTestClient
             final long start = System.currentTimeMillis();
             CollectionItem item = itemGen.generateSingle();
             itemCollection.insertItem(item);
-            System.out.printf("    created #%d: %s (in %s)",
-                    i, item.idAsString(), _secs(System.currentTimeMillis() - start));
+            System.out.printf("    inserted item #%d/%d: %s (in %s)",
+                    i+1, VALIDATE_SINGLE_ITEMS_TO_INSERT, item.idAsString(),
+                    _secs(System.currentTimeMillis() - start));
             // fetch to validate
             CollectionItem result = itemCollection.findItem(item.idAsString());
             verifyItem(item, result);
             System.out.println("(verified: OK)");
         }
 
-        System.out.printf("  will now insert %d batches of %d documents:\n",
-                VALIDATE_BATCHES_TO_INSERT, VALIDATE_BATCH_SIZE);
-        System.err.println("Not implemented yet!");
+        System.out.printf("  will now insert %d batches of %d documents (ordered: %s):\n",
+                VALIDATE_BATCHES_TO_INSERT, VALIDATE_BATCH_SIZE,
+                orderedInserts);
+
+        for (int i = 0; i < VALIDATE_BATCHES_TO_INSERT; ++i) {
+            final long start = System.currentTimeMillis();
+            List<CollectionItem> items = itemGen.generate(VALIDATE_BATCH_SIZE);
+            itemCollection.insertItems(items);
+            System.out.printf("    inserted Batch #%d/%d (in %s).",
+                    i+1, VALIDATE_BATCHES_TO_INSERT,
+                    _secs(System.currentTimeMillis() - start));
+            // Validate one by one
+            for (CollectionItem item : items) {
+                CollectionItem result = itemCollection.findItem(item.idAsString());
+                verifyItem(item, result);
+            }
+            System.out.println("(verified: OK)");
+        }
+
+        // Should now have certain number of Docs:
+        final int expCount = VALIDATE_SINGLE_ITEMS_TO_INSERT + (VALIDATE_BATCHES_TO_INSERT * VALIDATE_BATCH_SIZE);
+
+        System.out.printf("  all inserted and verified: should now have %d documents, verify: ", expCount);
+
+        final long actCount = itemCollection.countItems(expCount + 100);
+        if (expCount != actCount) {
+            throw new IllegalStateException("Expected to have "+expCount+" documents, had "+actCount);
+        }
+        System.out.println("OK (had expected number)");
+
+        // And all this being done, let's delete all items
+        System.out.printf("  and now let's delete all items: ");
+        long count = itemCollection.deleteAll();
+        System.out.printf(" deleted %d documents; validate: ", count);
+        itemCollection.validateIsEmpty();
+        System.out.println("OK, now empty");
     }
 
     private static void verifyItem(CollectionItem expected, CollectionItem actual) {

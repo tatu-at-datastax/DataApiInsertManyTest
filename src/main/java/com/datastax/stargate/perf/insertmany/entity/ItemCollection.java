@@ -1,27 +1,41 @@
 package com.datastax.stargate.perf.insertmany.entity;
 
+import java.util.List;
+import java.util.Optional;
+
 import com.datastax.astra.client.Collection;
 import com.datastax.astra.client.exception.TooManyDocumentsToCountException;
+import com.datastax.astra.client.model.DeleteResult;
 import com.datastax.astra.client.model.Document;
 import com.datastax.astra.client.model.Filter;
+import com.datastax.astra.client.model.InsertManyOptions;
 import com.datastax.astra.client.model.InsertOneResult;
-
-import java.util.Optional;
 
 /**
  * Wrapper around a Collection of Documents.
  */
-public record ItemCollection(String name, Collection<Document> collection, int vectorSize)
+public record ItemCollection(String name, Collection<Document> collection,
+                             int vectorSize, boolean orderedInserts)
 {
+    private static final InsertManyOptions OPTIONS_ORDERED = new InsertManyOptions()
+            .ordered(true);
+
+    private static final InsertManyOptions OPTIONS_UNORDERED = new InsertManyOptions()
+            .ordered(false);
+
     public void validateIsEmpty() {
         final int maxCount = 100;
+        long count = countItems(maxCount);
+        if (count > 0) {
+            throw new IllegalStateException("Collection '" + name + "' not empty; has " + count + " documents");
+        }
+    }
+
+    public long countItems(int maxCount) {
         try {
-            long count = collection.countDocuments(maxCount);
-            if (count > 0) {
-                throw new IllegalStateException("Collection '" + name + "' not empty; has " + count + " documents");
-            }
+            return collection.countDocuments(maxCount);
         } catch (TooManyDocumentsToCountException e) {
-            throw new IllegalStateException("Collection '" + name + "' not empty; has over " + maxCount + " documents");
+            return maxCount+1;
         }
     }
 
@@ -34,9 +48,19 @@ public record ItemCollection(String name, Collection<Document> collection, int v
         }
     }
 
+    public void insertItems(List<CollectionItem> items) {
+        collection.insertMany(items.stream().map(CollectionItem::toDocument).toList(),
+                orderedInserts ? OPTIONS_ORDERED : OPTIONS_UNORDERED);
+    }
+
     public CollectionItem findItem(String idAsSring) {
         Optional<Document> doc = collection.findOne(Filter.findById(idAsSring));
         return CollectionItem.fromDocument(doc);
+    }
+
+    public long deleteAll() {
+        DeleteResult dr = collection.deleteAll();
+        return dr.getDeletedCount();
     }
 
     private static String _str(Object ob) {

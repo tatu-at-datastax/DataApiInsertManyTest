@@ -49,17 +49,21 @@ public class DataApiInsertManyTest implements Callable<Integer>
     DataApiEnv env = DataApiEnv.PROD;
 
     @Option(names = {"-n", "--namespace"},
-            description = "Namespace (like 'ks')")
+            description = "Namespace (like 'default_ns')")
     String namespace = null;
 
-    @Option(names = {"-c", "--collection"},
+    @Option(names = {"-c", "--collection-name"},
             defaultValue = "insert_many_test",
             description = "Collection name (default: 'insert_many_test')")
     String collectionName;
 
-    @Option(names = {"-v", "--vector"},
+    @Option(names = {"-v", "--vector-length"},
             description = "Vector size; 0 to disable (default: 1536)")
     int vectorLength = 1536;
+
+    @Option(names = {"-o", "--ordered-inserts"}, arity="1",
+            description = "Whether inserts are Ordered (default: false)")
+    boolean orderedInserts = false;
 
     @Option(names = "--skip-init", arity="0",
           description = "Skip initialization (use existing collection)")
@@ -117,7 +121,7 @@ public class DataApiInsertManyTest implements Callable<Integer>
         }
 
         CollectionTestClient testClient = new CollectionTestClient(db, collectionName,
-                vectorLength);
+                vectorLength, orderedInserts);
         System.out.printf("Initialize test client (collection '%s'):\n", collectionName);
         try {
             testClient.initialize(skipInit);
