@@ -68,8 +68,16 @@ public class DataApiInsertManyTest implements Callable<Integer>
           description = "Skip initialization (use existing collection)")
     boolean skipInit = false;
 
+    @Option(names = {"-b", "--batch-size"},
+            description = "Batch size for inserts (default: 20)")
+    int batchSize = 20;
+
+    @Option(names = {"-r", "--rate-limit"},
+            description = "Rate limit as RPS (default: 100)")
+    int rateLimit = 100;
+
     @Override
-    public Integer call() throws Exception {
+    public Integer call() {
         if (!astraToken.startsWith(TOKEN_PREFIX)) {
             System.err.printf("Token does not start with prefix '%s': %s\n",
                     TOKEN_PREFIX, astraToken);
