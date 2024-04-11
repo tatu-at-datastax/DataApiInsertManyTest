@@ -142,6 +142,24 @@ public class InsertManyClient
         System.out.println("OK, now empty");
     }
 
+    public void runWarmupAndTest(int threadCount, int testMaxRPS)
+        throws InterruptedException
+    {
+        final CollectionItemGenerator itemGenerator = new CollectionItemGenerator(
+                CollectionItemIdGenerator.increasingCycleGenerator(0),
+                vectorSize);
+        final TestPhaseRunner testRunner = new TestPhaseRunner(threadCount,
+                itemCollection, itemGenerator);
+
+        // Warm-up with only 25% of full RPS; for 90 seconds
+        testRunner.runPhase("Warm-up", 10, java.util.concurrent.TimeUnit.SECONDS,
+                testMaxRPS / 4);
+
+        // Actual test with full RPS; for 6 minutes
+        testRunner.runPhase("Warm-up", 60, java.util.concurrent.TimeUnit.SECONDS,
+                testMaxRPS);
+    }
+
     private static void verifyItem(CollectionItem expected, CollectionItem actual) {
         if (actual == null) {
             throw new IllegalStateException("Failed to find inserted document with key '"

@@ -1,6 +1,8 @@
 package com.datastax.stargate.perf.insertmany.agent;
 
+import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
+import io.github.bucket4j.Bucket;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -9,49 +11,37 @@ import java.util.concurrent.atomic.AtomicReference;
  * instances matching active threads.
  */
 public class InsertManyAgent
-    implements Runnable
 {
     public final int id;
 
-    private final AtomicReference<AgentState> config;
     private final ItemCollection items;
 
-    public InsertManyAgent(int id, AtomicReference<AgentState> config, ItemCollection items) {
+    private final CollectionItemGenerator itemGenerator;
+
+    public InsertManyAgent(int id, ItemCollection items, CollectionItemGenerator itemGenerator) {
         this.id = id;
-        this.config = config;
         this.items = items;
+        this.itemGenerator = itemGenerator;
     }
 
-    @Override
-    public void run() {
-        AgentState state = config.get();
-        state.agentStarted(this);
+    public void runPhase(final String phaseName, final long endTime,
+                         Bucket rateLimiter, MetricsCollector metrics)
+    {
+        long currTime;
 
-        main_loop:
-        while (state != null) {
+        while ((currTime = System.currentTimeMillis()) < endTime) {
             // First: check throttling of the current phase
-            if (!state.rateLimiter().tryConsume(1)) {
+            if (!rateLimiter.tryConsume(1)) {
                 // Throttled, wait a bit, retry
                 waitMsecs(10L);
                 continue;
             }
-            // But then check if we have anything left to send
-            if (state.leftToSend().getAndDecrement() <= 0) {
-                // if not, need to wait for new phase
-                state.agentFinished(this);
-                AgentState nextState;
-
-                while ((nextState = config.get()) == state) {
-                    waitMsecs(10L);
-                }
-                state = nextState;
-                state.agentStarted(this);
-                continue;
-            }
+            final long startTime = System.currentTimeMillis();
 
             // TODO: Perform the insert
-            System.out.print(" [" + id + "]");
             waitMsecs(50L);
+
+            metrics.reportOkCall(this, System.currentTimeMillis() - startTime);
         }
     }
 

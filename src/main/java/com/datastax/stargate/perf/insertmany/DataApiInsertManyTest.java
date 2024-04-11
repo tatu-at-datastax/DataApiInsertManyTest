@@ -4,6 +4,8 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
+import com.datastax.stargate.perf.insertmany.agent.MetricsCollector;
+import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -74,7 +76,11 @@ public class DataApiInsertManyTest implements Callable<Integer>
 
     @Option(names = {"-r", "--rate-limit"},
             description = "Rate limit as RPS (default: 100)")
-    int rateLimit = 100;
+    int rateLimitRPS = 100;
+
+    @Option(names = {"-a", "--agent-count"},
+            description = "Agent count (translates to thread count) (default: 10)")
+    int agentCount = 10;
 
     @Override
     public Integer call() {
@@ -148,7 +154,17 @@ public class DataApiInsertManyTest implements Callable<Integer>
         }
         System.out.printf("Ok: Validation of '%s' successful.\n", collectionName);
 
-        System.out.println("Done.");
+        System.out.printf("Start warm-up, run test against '%s'.\n", collectionName);
+        try {
+            testClient.runWarmupAndTest(agentCount, rateLimitRPS);
+        } catch (Exception e) {
+            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+                    e.getMessage());
+            return 5;
+        }
+
+        System.out.println();
+        System.out.println("DONE!");
         return 0;
     }
 
