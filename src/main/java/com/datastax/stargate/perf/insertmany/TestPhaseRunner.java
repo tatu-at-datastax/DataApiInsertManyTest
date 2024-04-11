@@ -88,9 +88,9 @@ public class TestPhaseRunner {
        }
 
        // And then loop a bit, waiting for the end: delay between prints at least 1 second,
-       // at most 10 seconds;
+       // at most 10 seconds; aiming at 30 updates total.
        final long waitBetweenOutputSecs = Math.max(1L, Math.min(10L,
-               durationUnit.toSeconds(duration) / 50));
+               durationUnit.toSeconds(duration) / 30));
        System.out.printf("  (output state every %d seconds)\n", waitBetweenOutputSecs);
        final long waitBetweenOutputMsecs = waitBetweenOutputSecs * 1000L;
 

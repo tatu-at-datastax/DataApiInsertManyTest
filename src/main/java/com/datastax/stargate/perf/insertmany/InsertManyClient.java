@@ -152,11 +152,11 @@ public class InsertManyClient
         final TestPhaseRunner testRunner = new TestPhaseRunner(threadCount,
                 itemCollection, itemGenerator, batchSize);
 
-        // Warm-up with only 25% of full RPS; for 90 seconds
-        testRunner.runPhase("Warm-up", 10, java.util.concurrent.TimeUnit.SECONDS,
+        // Warm-up with only 25% of full RPS; for 30 seconds
+        testRunner.runPhase("Warm-up", 30, java.util.concurrent.TimeUnit.SECONDS,
                 testMaxRPS / 4);
 
-        // Actual test with full RPS; for 6 minutes
+        // Actual test with full RPS; for 1 minute
         testRunner.runPhase("Main Test", 60, java.util.concurrent.TimeUnit.SECONDS,
                 testMaxRPS);
     }
