@@ -18,15 +18,23 @@
     <version.logback>1.5.3</version.logback>
   </properties>
   <dependencies>
+    <!-- Pico-CLI for CLI option handling -->
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
       <version>4.7.5</version>
     </dependency>
+    <!-- Astra Java (Data API) Client for access -->
     <dependency>
       <groupId>com.datastax.astra</groupId>
       <artifactId>astra-db-java</artifactId>
       <version>1.0.0-beta1</version>
+    </dependency>
+    <!-- Bucket4j for rate-limiting -->
+    <dependency>
+      <groupId>com.bucket4j</groupId>
+      <artifactId>bucket4j-core</artifactId>
+      <version>8.10.1</version>
     </dependency>
     <!-- Need logback/slf4j for data API client -->
     <dependency>
