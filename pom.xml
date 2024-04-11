@@ -36,6 +36,12 @@
       <artifactId>bucket4j-core</artifactId>
       <version>8.10.1</version>
     </dependency>
+    <!-- Micrometer for metrics -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-core</artifactId>
+      <version>1.12.5</version>
+    </dependency>
     <!-- Need logback/slf4j for data API client -->
     <dependency>
       <groupId>ch.qos.logback</groupId>

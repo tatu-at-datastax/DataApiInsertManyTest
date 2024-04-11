@@ -15,7 +15,7 @@ import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 /**
  * Wrapper around access to test Collections for Data API
  */
-public class CollectionTestClient
+public class InsertManyClient
 {
     final private static int VALIDATE_SINGLE_ITEMS_TO_INSERT = 8;
 
@@ -30,8 +30,8 @@ public class CollectionTestClient
 
     private ItemCollection itemCollection;
 
-    public CollectionTestClient(Database db, String collectionName,
-                                int vectorSize, boolean orderedInserts) {
+    public InsertManyClient(Database db, String collectionName,
+                            int vectorSize, boolean orderedInserts) {
         this.db = db;
         this.collectionName = collectionName;
         this.vectorSize = vectorSize;

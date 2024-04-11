@@ -4,7 +4,6 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
-import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -120,7 +119,7 @@ public class DataApiInsertManyTest implements Callable<Integer>
             return 3;
         }
 
-        CollectionTestClient testClient = new CollectionTestClient(db, collectionName,
+        InsertManyClient testClient = new InsertManyClient(db, collectionName,
                 vectorLength, orderedInserts);
         System.out.printf("Initialize test client (collection '%s'):\n", collectionName);
         try {
