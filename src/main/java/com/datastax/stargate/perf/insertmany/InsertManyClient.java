@@ -21,21 +21,22 @@ public class InsertManyClient
 
     final private static int VALIDATE_BATCHES_TO_INSERT = 5;
 
-    final private static int VALIDATE_BATCH_SIZE = 10;
-
     private final Database db;
     private final String collectionName;
     private final int vectorSize;
     private final boolean orderedInserts;
+    private final int batchSize;
 
     private ItemCollection itemCollection;
 
     public InsertManyClient(Database db, String collectionName,
-                            int vectorSize, boolean orderedInserts) {
+                            int vectorSize, boolean orderedInserts,
+                            int batchSize) {
         this.db = db;
         this.collectionName = collectionName;
         this.vectorSize = vectorSize;
         this.orderedInserts = orderedInserts;
+        this.batchSize = batchSize;
     }
 
     /**
@@ -105,12 +106,12 @@ public class InsertManyClient
         }
 
         System.out.printf("  will now insert %d batches of %d documents (ordered: %s):\n",
-                VALIDATE_BATCHES_TO_INSERT, VALIDATE_BATCH_SIZE,
+                VALIDATE_BATCHES_TO_INSERT, batchSize,
                 orderedInserts);
 
         for (int i = 0; i < VALIDATE_BATCHES_TO_INSERT; ++i) {
             final long start = System.currentTimeMillis();
-            List<CollectionItem> items = itemGen.generate(VALIDATE_BATCH_SIZE);
+            List<CollectionItem> items = itemGen.generate(batchSize);
             itemCollection.insertItems(items);
             System.out.printf("    inserted Batch #%d/%d (in %s)",
                     i+1, VALIDATE_BATCHES_TO_INSERT,
@@ -124,7 +125,7 @@ public class InsertManyClient
         }
 
         // Should now have certain number of Docs:
-        final int expCount = VALIDATE_SINGLE_ITEMS_TO_INSERT + (VALIDATE_BATCHES_TO_INSERT * VALIDATE_BATCH_SIZE);
+        final int expCount = VALIDATE_SINGLE_ITEMS_TO_INSERT + (VALIDATE_BATCHES_TO_INSERT * batchSize);
 
         System.out.printf("  all inserted and verified: should now have %d documents, verify: ", expCount);
 
@@ -149,14 +150,14 @@ public class InsertManyClient
                 CollectionItemIdGenerator.increasingCycleGenerator(0),
                 vectorSize);
         final TestPhaseRunner testRunner = new TestPhaseRunner(threadCount,
-                itemCollection, itemGenerator);
+                itemCollection, itemGenerator, batchSize);
 
         // Warm-up with only 25% of full RPS; for 90 seconds
         testRunner.runPhase("Warm-up", 10, java.util.concurrent.TimeUnit.SECONDS,
                 testMaxRPS / 4);
 
         // Actual test with full RPS; for 6 minutes
-        testRunner.runPhase("Warm-up", 60, java.util.concurrent.TimeUnit.SECONDS,
+        testRunner.runPhase("Main Test", 60, java.util.concurrent.TimeUnit.SECONDS,
                 testMaxRPS);
     }
 

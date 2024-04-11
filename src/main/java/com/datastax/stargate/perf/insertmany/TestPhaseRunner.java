@@ -19,12 +19,15 @@ public class TestPhaseRunner {
    private final int agentCount;
    private final ItemCollection items;
    private final CollectionItemGenerator itemGenerator;
+   private final int batchSize;
 
    public TestPhaseRunner(int agentCount,
-                          ItemCollection items, CollectionItemGenerator itemGenerator) {
+                          ItemCollection items, CollectionItemGenerator itemGenerator,
+                          int batchSize) {
         this.agentCount = agentCount;
         this.items = items;
         this.itemGenerator = itemGenerator;
+        this.batchSize = batchSize;
    }
 
    public MetricsCollector runPhase(final String phaseName,
@@ -33,11 +36,16 @@ public class TestPhaseRunner {
    {
        System.out.printf("runPhase('%s') for %d %s; maxRPS: %d\n",
                phaseName, duration, durationUnit, maxRPS);
+       System.out.printf(" first, truncate collection: ");
+       items.deleteAll();
+       System.out.printf("ok.\n");
+       Thread.sleep(1000L);
+
        final long phaseStartMsecs = System.currentTimeMillis();
 
        final InsertManyAgent[] agents = new InsertManyAgent[agentCount];
        for (int i = 0; i < agentCount; ++i) {
-           agents[i] = new InsertManyAgent(i, items, itemGenerator);
+           agents[i] = new InsertManyAgent(i, items, itemGenerator, batchSize);
        }
        final ExecutorService exec = Executors.newFixedThreadPool(agentCount);
        final MetricsCollector metrics = MetricsCollector.create();
@@ -61,7 +69,7 @@ public class TestPhaseRunner {
                    try {
                        startLatch.await();
                    } catch (InterruptedException e) {
-                       System.err.printf("ERROR: failed to start %s: (%s) %s",
+                       System.err.printf("ERROR: failed to start %s: (%s) %s\n",
                                agent, e.getClass().getName(), e.getMessage());
                        endLatch.countDown();
                        return;
@@ -70,7 +78,7 @@ public class TestPhaseRunner {
                    try {
                        agent.runPhase(phaseName, endTime, rateLimiter, metrics);
                    } catch (Exception e) {
-                       System.err.printf("ERROR: failed runPhase on %s: (%s) %s",
+                       System.err.printf("ERROR: failed runPhase on %s: (%s) %s\n",
                                agent, e.getClass().getName(), e.getMessage());
                    } finally {
                        endLatch.countDown();

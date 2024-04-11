@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import com.datastax.astra.client.Collection;
+import com.datastax.astra.client.exception.DataApiException;
 import com.datastax.astra.client.exception.TooManyDocumentsToCountException;
 import com.datastax.astra.client.model.DeleteResult;
 import com.datastax.astra.client.model.Document;
 import com.datastax.astra.client.model.Filter;
 import com.datastax.astra.client.model.InsertManyOptions;
+import com.datastax.astra.client.model.InsertManyResult;
 import com.datastax.astra.client.model.InsertOneResult;
 
 /**
@@ -39,7 +41,7 @@ public record ItemCollection(String name, Collection<Document> collection,
         }
     }
 
-    public void insertItem(CollectionItem item) {
+    public void insertItem(CollectionItem item) throws DataApiException {
         InsertOneResult result = collection.insertOne(item.toDocument());
         if (!item.idAsString().equals(result.getInsertedId())) {
             throw new IllegalStateException(String.format(
@@ -48,9 +50,14 @@ public record ItemCollection(String name, Collection<Document> collection,
         }
     }
 
-    public void insertItems(List<CollectionItem> items) {
-        collection.insertMany(items.stream().map(CollectionItem::toDocument).toList(),
+    public boolean insertItems(List<CollectionItem> items) throws DataApiException {
+        InsertManyResult result = collection.insertMany(items.stream().map(CollectionItem::toDocument).toList(),
                 orderedInserts ? OPTIONS_ORDERED : OPTIONS_UNORDERED);
+        List<?> ids = result.getInsertedIds();
+        if (ids == null || ids.size() != items.size()) {
+            return false;
+        }
+        return true;
     }
 
     public CollectionItem findItem(String idAsSring) {

@@ -14,21 +14,15 @@ public class CollectionItemGenerator {
     }
 
     public CollectionItem generateSingle() {
-        idGenerator.nextCycle();
-        return _generate();
+        return CollectionItem.create(idGenerator.nextId(), vectorLength);
     }
 
     public List<CollectionItem> generate(int count) {
-        idGenerator.nextCycle();
+        CollectionItemId[] ids = idGenerator.nextIds(count);
         List<CollectionItem> result = new ArrayList<>(count);
         for (int i = 0; i < count; ++i) {
-            result.add(_generate());
+            result.add(CollectionItem.create(ids[i], vectorLength));
         }
         return result;
-    }
-
-    private CollectionItem _generate() {
-        final CollectionItemId itemId = idGenerator.nextId();
-        return CollectionItem.create(itemId, vectorLength);
     }
 }

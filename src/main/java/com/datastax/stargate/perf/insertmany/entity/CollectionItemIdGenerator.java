@@ -14,12 +14,9 @@ public class CollectionItemIdGenerator {
 
     private int cycle;
 
-    private int step;
-
     private CollectionItemIdGenerator(boolean increasing, int cycle) {
         this.increasing = increasing;
         this.cycle = cycle;
-        this.step = 0;
     }
 
     public static CollectionItemIdGenerator increasingCycleGenerator(int startCycle) {
@@ -30,17 +27,27 @@ public class CollectionItemIdGenerator {
         return new CollectionItemIdGenerator(false, startCycle);
     }
 
-    public CollectionItemIdGenerator nextCycle() {
+    public synchronized CollectionItemId nextId()
+    {
+        nextCycle();
+        return new CollectionItemId(cycle, 0);
+    }
+
+    public synchronized CollectionItemId[] nextIds(int count)
+    {
+        nextCycle();
+        CollectionItemId[] ids = new CollectionItemId[count];
+        for (int i = 0; i < count; ++i) {
+            ids[i] = new CollectionItemId(cycle, i);
+        }
+        return ids;
+    }
+
+    private void nextCycle() {
         if (increasing) {
             ++cycle;
         } else {
             --cycle;
         }
-        step = 0;
-        return this;
-    }
-
-    public CollectionItemId nextId() {
-        return new CollectionItemId(cycle, step++);
     }
 }

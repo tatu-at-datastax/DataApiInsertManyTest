@@ -134,7 +134,7 @@ public class DataApiInsertManyTest implements Callable<Integer>
         }
 
         InsertManyClient testClient = new InsertManyClient(db, collectionName,
-                vectorLength, orderedInserts);
+                vectorLength, orderedInserts, batchSize);
         System.out.printf("Initialize test client (collection '%s'):\n", collectionName);
         try {
             testClient.initialize(skipInit);
