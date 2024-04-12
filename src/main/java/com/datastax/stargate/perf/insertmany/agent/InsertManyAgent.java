@@ -47,9 +47,9 @@ public class InsertManyAgent
                 ok = items.insertItems(batch);
                 metrics.reportOkCall(this, System.currentTimeMillis() - startTime);
             } catch (DataApiException ex) {
+                metrics.reportErrorCall(this, System.currentTimeMillis() - startTime);
                 System.err.printf("WARN: exception for %s: (%s) %s\n",
                         this, ex.getErrorCode(), ex.getMessage());
-                metrics.reportErrorCall(this, System.currentTimeMillis() - startTime);
             }
         }
     }
