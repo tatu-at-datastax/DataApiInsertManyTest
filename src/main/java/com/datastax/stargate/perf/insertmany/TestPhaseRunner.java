@@ -107,10 +107,9 @@ public class TestPhaseRunner {
            final long waitMsecs = Math.min(endTime - currTime, waitBetweenOutputMsecs);
            Thread.sleep(waitMsecs);
 
-           System.out.printf(" %s: %.2f secs -> %s%s\n", phaseName,
+           System.out.printf(" %s: %.2f secs -> %s\n", phaseName,
                    (currTime - phaseStartMsecs) / 1000.0,
-                   metrics.callCountsDesc(),
-                   metrics.rateDesc());
+                   metrics.allStatsDesc());
        }
 
        try {
@@ -122,8 +121,8 @@ public class TestPhaseRunner {
        }
 
        final long phaseMsecs = System.currentTimeMillis() - phaseStartMsecs;
-       System.out.printf("\nCompleted phase ('%s') in %.2f seconds: %s\n",
-               phaseName, (phaseMsecs / 1000.0), metrics.callCountsDesc());
+       System.out.printf("\nCompleted phase ('%s') in %.2f seconds -> %s\n",
+               phaseName, (phaseMsecs / 1000.0), metrics.allStatsDesc());
 
        return metrics;
    }

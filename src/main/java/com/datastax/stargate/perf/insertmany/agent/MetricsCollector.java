@@ -43,7 +43,7 @@ public class MetricsCollector {
         HistogramSnapshot okSnapshot = okCallTimer.takeSnapshot();
         ValueAtPercentile[] pvalues = okSnapshot.percentileValues();
         pvalues[0].toString();
-        return String.format("[Counts: OK/%d (p50/p95: %.1f/%.1f ms) Error/%d]",
+        return String.format("[Counts OK: %d (p50/p95: %.1f/%.1f ms) Error: %d]",
                 okCalls(),
                 pvalues[0].value(TimeUnit.MILLISECONDS), pvalues[1].value(TimeUnit.MILLISECONDS),
                 errorCalls());
@@ -54,6 +54,9 @@ public class MetricsCollector {
                 totalCalls() * 1000.0 / (System.currentTimeMillis() - startTime));
     }
 
+    public String allStatsDesc() {
+        return callCountsDesc() + rateDesc();
+    }
 
     public void reportOkCall(InsertManyAgent agent, long timeMsecs) {
         okCalls.incrementAndGet();
