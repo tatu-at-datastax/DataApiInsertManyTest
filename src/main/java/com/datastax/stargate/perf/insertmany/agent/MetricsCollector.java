@@ -9,8 +9,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class MetricsCollector {
+    private final long startTime;
+
     private final AtomicInteger okCalls = new AtomicInteger();
-    private final AtomicInteger failCalls = new AtomicInteger();
     private final AtomicInteger errorCalls = new AtomicInteger();
 
     private final Timer okCallTimer;
@@ -19,6 +20,7 @@ public class MetricsCollector {
         okCallTimer = Timer.builder("okCallTimer")
                 .publishPercentiles(0.5, 0.95)
                 .register(registry);
+        startTime = System.currentTimeMillis();
     }
 
     public static MetricsCollector create() {
@@ -29,35 +31,33 @@ public class MetricsCollector {
     public int okCalls() {
         return okCalls.get();
     }
-    public int failCalls() {
-        return failCalls.get();
-    }
     public int errorCalls() {
         return errorCalls.get();
     }
 
     public int totalCalls() {
-        return okCalls() + failCalls() + errorCalls();
+        return okCalls() + errorCalls();
     }
 
     public String callCountsDesc() {
         HistogramSnapshot okSnapshot = okCallTimer.takeSnapshot();
         ValueAtPercentile[] pvalues = okSnapshot.percentileValues();
         pvalues[0].toString();
-        return String.format("[OK: %d (p50/p95: %.1f/%.1f ms), Fail: %d, Error: %d]",
-//        return String.format("[OK: %d (%s), Fail: %d, Error: %d]",
+        return String.format("[Counts: OK/%d (p50/p95: %.1f/%.1f ms) Error/%d]",
                 okCalls(),
                 pvalues[0].value(TimeUnit.MILLISECONDS), pvalues[1].value(TimeUnit.MILLISECONDS),
-                failCalls(), errorCalls());
+                errorCalls());
     }
+
+    public String rateDesc() {
+        return String.format("[Rate: %.1f calls/sec]",
+                totalCalls() * 1000.0 / (System.currentTimeMillis() - startTime));
+    }
+
 
     public void reportOkCall(InsertManyAgent agent, long timeMsecs) {
         okCalls.incrementAndGet();
         okCallTimer.record(timeMsecs, TimeUnit.MILLISECONDS);
-    }
-
-    public void reportFailCall(InsertManyAgent agent, long timeMsecs) {
-        failCalls.incrementAndGet();
     }
 
     public void reportErrorCall(InsertManyAgent agent, long timeMsecs) {
