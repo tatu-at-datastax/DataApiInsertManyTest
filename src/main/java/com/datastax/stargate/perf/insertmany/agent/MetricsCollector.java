@@ -44,7 +44,7 @@ public class MetricsCollector {
         HistogramSnapshot okSnapshot = okCallTimer.takeSnapshot();
         ValueAtPercentile[] pvalues = okSnapshot.percentileValues();
         pvalues[0].toString();
-        return String.format("[OK: %d (p50/P95: %.1f/%.1f ms), Fail: %d, Error: %d]",
+        return String.format("[OK: %d (p50/p95: %.1f/%.1f ms), Fail: %d, Error: %d]",
 //        return String.format("[OK: %d (%s), Fail: %d, Error: %d]",
                 okCalls(),
                 pvalues[0].value(TimeUnit.MILLISECONDS), pvalues[1].value(TimeUnit.MILLISECONDS),
