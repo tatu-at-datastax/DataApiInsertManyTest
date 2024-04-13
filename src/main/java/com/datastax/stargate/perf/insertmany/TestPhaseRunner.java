@@ -34,8 +34,9 @@ public class TestPhaseRunner {
                                     long duration, TimeUnit durationUnit,
                                     int maxRPS) throws InterruptedException
    {
-       System.out.printf("runPhase('%s') for %d %s; maxRPS: %d\n",
-               phaseName, duration, durationUnit, maxRPS);
+       System.out.printf("runPhase('%s') for %d %s (maxRPS: %d, ordered: %s)\n",
+               phaseName, duration, durationUnit,
+               maxRPS, items.orderedInserts());
        System.out.printf(" first, truncate collection: ");
        items.deleteAll();
        System.out.printf("ok.\n");

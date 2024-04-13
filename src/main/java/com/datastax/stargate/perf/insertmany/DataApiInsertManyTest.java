@@ -51,7 +51,7 @@ public class DataApiInsertManyTest implements Callable<Integer>
 
     @Option(names = {"-n", "--namespace"},
             description = "Namespace (like 'default_ns')")
-    String namespace = null;
+    String ns = null;
 
     @Option(names = {"-c", "--collection-name"},
             defaultValue = "insert_many_test",
@@ -62,7 +62,11 @@ public class DataApiInsertManyTest implements Callable<Integer>
             description = "Vector size; 0 to disable (default: 1536)")
     int vectorLength = 1536;
 
-    @Option(names = {"-o", "--ordered-inserts"}, arity="1",
+    @Option(names = {"-x", "--index", "--add-indexes"}, arity="1",
+            description = "Whether to Index (all) Fields or not (default: true)")
+    boolean addIndexes = true;
+
+    @Option(names = {"-o", "--ordered", "--ordered-inserts"}, arity="1",
             description = "Whether inserts are Ordered (default: false)")
     boolean orderedInserts = false;
 
@@ -74,12 +78,12 @@ public class DataApiInsertManyTest implements Callable<Integer>
             description = "Batch size for inserts (default: 20)")
     int batchSize = 20;
 
-    @Option(names = {"-r", "--rate-limit"},
+    @Option(names = {"-r", "--rate", "--rate-limit"},
             description = "Rate limit as RPS (default: 100)")
     int rateLimitRPS = 100;
 
     @Option(names = {"-a", "--agent-count"},
-            description = "Agent count (translates to thread count) (default: 10)")
+            description = "Agent count (also: thread count) (default: 10)")
     int agentCount = 10;
 
     @Override
@@ -108,10 +112,10 @@ public class DataApiInsertManyTest implements Callable<Integer>
         Database db;
 
         try {
-            if (namespace == null || namespace.isEmpty()) {
+            if (ns == null || ns.isEmpty()) {
                 db = client.getDatabase(dbId);
             } else {
-                db = client.getDatabase(dbId, namespace);
+                db = client.getDatabase(dbId, ns);
             }
         } catch (DatabaseNotFoundException dbNfe) {
             System.err.printf("\n  FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
@@ -137,7 +141,7 @@ public class DataApiInsertManyTest implements Callable<Integer>
                 vectorLength, orderedInserts, batchSize);
         System.out.printf("Initialize test client (collection '%s'):\n", collectionName);
         try {
-            testClient.initialize(skipInit);
+            testClient.initialize(skipInit, addIndexes);
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
                     e.getMessage());
@@ -150,6 +154,8 @@ public class DataApiInsertManyTest implements Callable<Integer>
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
                     e.getMessage());
+            System.err.println("StackTrace:");
+            e.printStackTrace(System.err);
             return 4;
         }
         System.out.printf("Ok: Validation of '%s' successful.\n", collectionName);

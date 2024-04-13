@@ -51,8 +51,20 @@ public record ItemCollection(String name, Collection<Document> collection,
     }
 
     public boolean insertItems(List<CollectionItem> items) throws DataApiException {
-        InsertManyResult result = collection.insertMany(items.stream().map(CollectionItem::toDocument).toList(),
-                orderedInserts ? OPTIONS_ORDERED : OPTIONS_UNORDERED);
+        // Special case: 1 item, simply use "insertOne()" instead
+        if (items.size() == 1) {
+            insertItem(items.get(0));
+            return true;
+        }
+
+        List<Document> itemList = items.stream().map(CollectionItem::toDocument).toList();
+        InsertManyOptions options = new InsertManyOptions()
+                .ordered(orderedInserts);
+        if (items.size() > options.getChunkSize()) {
+            options = options.chunkSize(items.size());
+        }
+
+        InsertManyResult result = collection.insertMany(itemList, options);
         List<?> ids = result.getInsertedIds();
         if (ids == null || ids.size() != items.size()) {
             return false;

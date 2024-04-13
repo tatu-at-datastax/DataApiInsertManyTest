@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.datastax.astra.client.Collection;
 import com.datastax.astra.client.Database;
+import com.datastax.astra.client.model.CollectionOptions;
 import com.datastax.astra.client.model.DeleteResult;
 import com.datastax.astra.client.model.Document;
 import com.datastax.astra.client.model.SimilarityMetric;
@@ -43,7 +44,8 @@ public class InsertManyClient
      * Method that will (re)create Collection as necessary; clear (if not deleted).
      * Fails with exception if there are problems with collection access.
      */
-    public void initialize(boolean skipCollectionRecreate) throws Exception
+    public void initialize(boolean skipCollectionRecreate,
+                           boolean addIndexes) throws Exception
     {
         System.out.printf("  checking if collection '%s' exists: ", collectionName);
         Collection<Document> coll = null;
@@ -68,11 +70,26 @@ public class InsertManyClient
         }
 
         if (coll == null) {
-            System.out.printf("Will (re)create collection '%s': ", collectionName);
+            CollectionOptions.CollectionOptionsBuilder opts = CollectionOptions.builder();
+            String desc;
+            if (vectorSize > 0) {
+                opts = opts.vector(vectorSize, SimilarityMetric.COSINE);
+                desc = "vector: "+vectorSize+"/"+SimilarityMetric.COSINE;
+            } else {
+                desc = "vector: NONE";
+            }
+            if (addIndexes) {
+                desc += ", index: ALL";
+            } else {
+                desc += ", index: NONE";
+                opts = opts.indexingDeny("*");
+            }
+            System.out.printf("Will (re)create collection '%s' (%s): ",
+                    collectionName, desc);
+            final CollectionOptions collOpts = opts.build();
+
             final long start = System.currentTimeMillis();
-            coll = (vectorSize > 0)
-                    ? db.createCollection(collectionName, vectorSize, SimilarityMetric.COSINE)
-                    : db.createCollection(collectionName);
+            coll = db.createCollection(collectionName, collOpts);
             System.out.printf("created (in %s)); options = %s\n",
                     _secs(System.currentTimeMillis() - start),
                     coll.getDefinition().getOptions());
