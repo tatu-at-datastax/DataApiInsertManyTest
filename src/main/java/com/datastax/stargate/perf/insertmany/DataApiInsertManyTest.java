@@ -154,8 +154,6 @@ public class DataApiInsertManyTest implements Callable<Integer>
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
                     e.getMessage());
-            System.err.println("StackTrace:");
-            e.printStackTrace(System.err);
             return 4;
         }
         System.out.printf("Ok: Validation of '%s' successful.\n", collectionName);
