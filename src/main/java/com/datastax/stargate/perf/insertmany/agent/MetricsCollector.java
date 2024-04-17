@@ -11,21 +11,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MetricsCollector {
     private final long startTime;
 
+    private final int batchSize;
+
     private final AtomicInteger okCalls = new AtomicInteger();
     private final AtomicInteger errorCalls = new AtomicInteger();
 
     private final Timer okCallTimer;
 
-    private MetricsCollector(SimpleMeterRegistry registry) {
+    private MetricsCollector(SimpleMeterRegistry registry, int batchSize) {
+        this.batchSize = batchSize;
         okCallTimer = Timer.builder("okCallTimer")
                 .publishPercentiles(0.5, 0.95)
                 .register(registry);
         startTime = System.currentTimeMillis();
     }
 
-    public static MetricsCollector create() {
+    public static MetricsCollector create(int batchSize) {
         SimpleMeterRegistry registry = new SimpleMeterRegistry();
-        return new MetricsCollector(registry);
+        return new MetricsCollector(registry, batchSize);
     }
 
     public int okCalls() {
@@ -50,8 +53,9 @@ public class MetricsCollector {
     }
 
     public String rateDesc() {
-        return String.format("[Rate: %.1f calls/sec]",
-                totalCalls() * 1000.0 / (System.currentTimeMillis() - startTime));
+        double callRate = totalCalls() * 1000.0 / (System.currentTimeMillis() - startTime);
+        return String.format("[Rate: %.1f calls (%.1f docs)/sec]",
+                callRate, callRate * batchSize);
     }
 
     public String allStatsDesc() {

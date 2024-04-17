@@ -49,7 +49,7 @@ public class TestPhaseRunner {
            agents[i] = new InsertManyAgent(i, items, itemGenerator, batchSize);
        }
        final ExecutorService exec = Executors.newFixedThreadPool(agentCount);
-       final MetricsCollector metrics = MetricsCollector.create();
+       final MetricsCollector metrics = MetricsCollector.create(batchSize);
        final Bucket rateLimiter = Bucket.builder()
                // Allow +10% burst beyond MaxRPS
                .addLimit(limit -> limit.capacity(maxRPS + (int) (maxRPS * 0.1))
@@ -122,7 +122,7 @@ public class TestPhaseRunner {
        }
 
        final long phaseMsecs = System.currentTimeMillis() - phaseStartMsecs;
-       System.out.printf("\nCompleted phase ('%s') in %.2f seconds -> %s\n",
+       System.out.printf("\nCompleted phase ('%s') in %.2f seconds\n -> %s\n",
                phaseName, (phaseMsecs / 1000.0), metrics.allStatsDesc());
 
        return metrics;
