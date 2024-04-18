@@ -101,10 +101,12 @@ public class DataApiInsertManyTest implements Callable<Integer>
             return 2;
         }
         System.out.print("Creating DataAPIClient...");
+        final int maxDocsToInsert = Math.max(batchSize, DataAPIOptions.DEFAULT_MAX_CHUNKSIZE);
         DataAPIClient client = new DataAPIClient(astraToken,
                 DataAPIOptions.builder()
-                .withDestination(env.destination())
-                .build());
+                    .withDestination(env.destination())
+                    .withMaxDocumentsInInsert(maxDocsToInsert)
+                    .build());
         System.out.println(" created");
 
         System.out.printf("Connecting to database '%s' (env '%s')...",
