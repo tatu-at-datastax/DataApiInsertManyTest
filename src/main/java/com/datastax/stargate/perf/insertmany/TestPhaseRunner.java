@@ -122,8 +122,8 @@ public class TestPhaseRunner {
        }
 
        final long phaseMsecs = System.currentTimeMillis() - phaseStartMsecs;
-       System.out.printf("\nCompleted phase ('%s') in %.2f seconds\n -> %s\n",
-               phaseName, (phaseMsecs / 1000.0), metrics.allStatsDesc());
+       System.out.printf("\nCompleted phase ('%s') with %d agents in %.2f seconds\n -> %s\n",
+               phaseName, agentCount, (phaseMsecs / 1000.0), metrics.allStatsDesc());
 
        return metrics;
    }
