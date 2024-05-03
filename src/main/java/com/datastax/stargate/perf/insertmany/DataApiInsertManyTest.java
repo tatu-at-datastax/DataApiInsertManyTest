@@ -4,6 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
+import com.datastax.astra.client.admin.DatabaseAdmin;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -49,8 +50,8 @@ public class DataApiInsertManyTest implements Callable<Integer>
     DataApiEnv env = DataApiEnv.PROD;
 
     @Option(names = {"-n", "--namespace"},
-            description = "Namespace (like 'default_ns')")
-    String ns = null;
+            description = "Namespace (default 'default_keyspace')")
+    String ns = "default_keyspace";
 
     @Option(names = {"-c", "--collection-name"},
             defaultValue = "insert_many_test",
@@ -129,7 +130,7 @@ public class DataApiInsertManyTest implements Callable<Integer>
                 return 3;
             }
             System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
-        } else {
+        } else { // LOCAL env
             String token = new TokenProviderStargateV2("cassandra", "cassandra").getToken();
             System.out.print("Creating DataAPIClient...");
             final DataAPIClient client = new DataAPIClient(token,
@@ -143,8 +144,17 @@ public class DataApiInsertManyTest implements Callable<Integer>
             System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
         }
 
-        System.out.printf("Fetch names of existing Collections in the database: ");
+        System.out.printf("Check existence of namespace '%s'...", db.getNamespaceName());
+        DatabaseAdmin admin = db.getDatabaseAdmin();
+        if (admin.namespaceExists(db.getNamespaceName())) {
+            System.out.println("namespace exists.");
+        } else {
+            System.out.printf("namespace does not exist: will try create... ");
+            admin.createNamespace(db.getNamespaceName());
+            System.out.println("Created!");
+        }
 
+        System.out.printf("Fetch names of existing Collections in the database: ");
         Stream<String> collectionNames;
 
         try {
