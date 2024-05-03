@@ -4,8 +4,6 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
-import com.datastax.stargate.perf.insertmany.agent.MetricsCollector;
-import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -13,6 +11,7 @@ import com.datastax.astra.client.DataAPIClient;
 import com.datastax.astra.client.DataAPIOptions;
 import com.datastax.astra.client.Database;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
+import com.datastax.astra.internal.auth.TokenProviderStargateV2;
 
 @CommandLine.Command(name = "DataApiInsertManyTest", mixinStandardHelpOptions=true)
 public class DataApiInsertManyTest implements Callable<Integer>
@@ -37,13 +36,13 @@ public class DataApiInsertManyTest implements Callable<Integer>
 
     private final static String TOKEN_PREFIX = "AstraCS:";
 
-    @Option(names = {"-t", "--token"}, required=true,
-            description = "Astra Token (starts with 'AstraCS:')")
-    String astraToken;
+    @Option(names = {"-t", "--token"},
+            description = "Astra Token (starts with 'AstraCS:' except in LOCAL env)")
+    String astraToken = "";
 
-    @Option(names = {"-d", "--db", "--db-id"}, required=true,
+    @Option(names = {"-d", "--db", "--db-id"},
             description = "Database ID (UUID)")
-    String dbIdAsString;
+    String dbIdAsString = "";
 
     @Option(names = {"-e", "--env"},
             description = "Astra env (PROD [default], DEV, TEST, LOCAL)")
@@ -87,44 +86,62 @@ public class DataApiInsertManyTest implements Callable<Integer>
     int agentCount = 10;
 
     @Override
-    public Integer call() {
-        if (!astraToken.startsWith(TOKEN_PREFIX)) {
-            System.err.printf("Token does not start with prefix '%s': %s\n",
-                    TOKEN_PREFIX, astraToken);
-            return 1;
-        }
-        UUID dbId;
-        try {
-            dbId = UUID.fromString(dbIdAsString);
-        } catch (Exception e) {
-            System.err.printf("Database id not valid UUID: %s\n", dbIdAsString);
-            return 2;
-        }
-        System.out.print("Creating DataAPIClient...");
+    public Integer call()
+    {
         final int maxDocsToInsert = Math.max(batchSize, DataAPIOptions.DEFAULT_MAX_CHUNKSIZE);
-        DataAPIClient client = new DataAPIClient(astraToken,
-                DataAPIOptions.builder()
-                    .withDestination(env.destination())
-                    .withMaxDocumentsInInsert(maxDocsToInsert)
-                    .build());
-        System.out.println(" created");
-
-        System.out.printf("Connecting to database '%s' (env '%s')...",
-                dbId, env.name());
         Database db;
 
-        try {
-            if (ns == null || ns.isEmpty()) {
-                db = client.getDatabase(dbId);
-            } else {
-                db = client.getDatabase(dbId, ns);
+        // Astra differs from local:
+        if (env != DataApiEnv.LOCAL) {
+            // Some validation only matters for Astra (non-local)
+            if (!astraToken.startsWith(TOKEN_PREFIX)
+                    && env != DataApiEnv.LOCAL) {
+                System.err.printf("Token does not start with prefix (has to, in %s) '%s': %s\n",
+                        env, TOKEN_PREFIX, astraToken);
+                return 1;
             }
-        } catch (DatabaseNotFoundException dbNfe) {
-            System.err.printf("\n  FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
-                    dbNfe.getMessage());
-            return 3;
+            final UUID dbId;
+            try {
+                dbId = UUID.fromString(dbIdAsString);
+            } catch (Exception e) {
+                System.err.printf("Database id not valid UUID: %s\n", dbIdAsString);
+                return 2;
+            }
+            System.out.print("Creating DataAPIClient...");
+            final DataAPIClient client = new DataAPIClient(astraToken,
+                    DataAPIOptions.builder()
+                            .withDestination(env.destination())
+                            .withMaxDocumentsInInsert(maxDocsToInsert)
+                            .build());
+            System.out.println(" created");
+            System.out.printf("Connecting to database '%s' (env '%s')...",
+                    dbId, env.name());
+
+            try {
+                if (ns == null || ns.isEmpty()) {
+                    db = client.getDatabase(dbId);
+                } else {
+                    db = client.getDatabase(dbId, ns);
+                }
+            } catch (DatabaseNotFoundException dbNfe) {
+                System.err.printf("\n  FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
+                        dbNfe.getMessage());
+                return 3;
+            }
+            System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
+        } else {
+            String token = new TokenProviderStargateV2("cassandra", "cassandra").getToken();
+            System.out.print("Creating DataAPIClient...");
+            final DataAPIClient client = new DataAPIClient(token,
+                    DataAPIOptions.builder()
+                            .withDestination(env.destination())
+                            .withMaxDocumentsInInsert(maxDocsToInsert)
+                            .build());
+            System.out.println(" created.");
+            System.out.printf("Connecting to LOCAL database...");
+            db = client.getDatabase("http://localhost:8181", "default_keyspace");
+            System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
         }
-        System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
 
         System.out.printf("Fetch names of existing Collections in the database: ");
 
