@@ -37,7 +37,7 @@ public class DataApiInsertManyTest
     @Override
     public Integer call()
     {
-        maxDocsToInsert = Math.max(batchSize, DataAPIOptions.DEFAULT_MAX_CHUNKSIZE);
+        maxDocsToInsert = Math.max(batchSize, DataAPIOptions.DEFAULT_MAX_CHUNK_SIZE);
 
         final AtomicInteger exitCode = new AtomicInteger(-1);
         Database db = initializeDB(exitCode);
