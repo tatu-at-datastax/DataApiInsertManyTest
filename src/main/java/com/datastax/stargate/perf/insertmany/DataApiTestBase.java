@@ -47,8 +47,8 @@ abstract class DataApiTestBase {
             description = "Astra env (PROD [default], DEV, TEST, LOCAL)")
     DataApiEnv env = DataApiEnv.PROD;
 
-    @CommandLine.Option(names = {"-n", "--namespace"},
-            description = "Namespace (default 'default_keyspace')")
+    @CommandLine.Option(names = {"-k", "--keyspace", "--namespace"},
+            description = "Keyspace (default 'default_keyspace')")
     String ns = "default_keyspace";
 
     @CommandLine.Option(names = {"-c", "--collection-name"},
@@ -79,8 +79,7 @@ abstract class DataApiTestBase {
         // Astra differs from local:
         if (env != DataApiEnv.LOCAL) {
             // Some validation only matters for Astra (non-local)
-            if (!astraToken.startsWith(TOKEN_PREFIX)
-                    && env != DataApiEnv.LOCAL) {
+            if (!astraToken.startsWith(TOKEN_PREFIX)) {
                 System.err.printf("Token does not start with prefix (has to, in %s) '%s': %s\n",
                         env, TOKEN_PREFIX, astraToken);
                 exitCode.set(1);
@@ -110,22 +109,22 @@ abstract class DataApiTestBase {
                 exitCode.set(3);
                 return null;
             }
-            System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
+            System.out.printf(" connected: keyspace '%s'\n", db.getKeyspaceName());
         } else { // LOCAL env
             String token = new UsernamePasswordTokenProvider("cassandra", "cassandra").getToken();
             final DataAPIClient client = createClient(token);
-            System.out.printf("Connecting to LOCAL database...");
+            System.out.print("Connecting to LOCAL database...");
             db = client.getDatabase("http://localhost:8181", "default_keyspace");
-            System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
+            System.out.printf(" connected: keyspace '%s'\n", db.getKeyspaceName());
         }
 
-        System.out.printf("Check existence of namespace '%s'...", db.getNamespaceName());
+        System.out.printf("Check existence of keyspace '%s'...", db.getKeyspaceName());
         DatabaseAdmin admin = db.getDatabaseAdmin();
-        if (admin.namespaceExists(db.getNamespaceName())) {
-            System.out.println("namespace exists.");
+        if (admin.keyspaceExists(db.getKeyspaceName())) {
+            System.out.println("keyspace exists.");
         } else {
-            System.out.printf("namespace does not exist: will try create... ");
-            admin.createNamespace(db.getNamespaceName());
+            System.out.print("keyspace does not exist: will try create... ");
+            admin.createKeyspace(db.getKeyspaceName());
             System.out.println("Created!");
         }
 
