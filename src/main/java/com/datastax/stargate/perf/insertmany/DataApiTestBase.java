@@ -4,7 +4,7 @@ import com.datastax.astra.client.DataAPIClient;
 import com.datastax.astra.client.DataAPIOptions;
 import com.datastax.astra.client.Database;
 import com.datastax.astra.client.admin.DatabaseAdmin;
-import com.datastax.astra.internal.auth.TokenProviderStargateV2;
+import com.datastax.astra.internal.auth.UsernamePasswordTokenProvider;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
 
@@ -112,7 +112,7 @@ abstract class DataApiTestBase {
             }
             System.out.printf(" connected: namespace '%s'\n", db.getNamespaceName());
         } else { // LOCAL env
-            String token = new TokenProviderStargateV2("cassandra", "cassandra").getToken();
+            String token = new UsernamePasswordTokenProvider("cassandra", "cassandra").getToken();
             final DataAPIClient client = createClient(token);
             System.out.printf("Connecting to LOCAL database...");
             db = client.getDatabase("http://localhost:8181", "default_keyspace");

@@ -1,19 +1,14 @@
 package com.datastax.stargate.perf.insertmany;
 
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import com.datastax.astra.client.admin.DatabaseAdmin;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
-import com.datastax.astra.client.DataAPIClient;
 import com.datastax.astra.client.DataAPIOptions;
 import com.datastax.astra.client.Database;
-import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
-import com.datastax.astra.internal.auth.TokenProviderStargateV2;
 
 @CommandLine.Command(name = "DataApiInsertManyTest", mixinStandardHelpOptions=true)
 public class DataApiInsertManyTest
