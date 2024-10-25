@@ -4,7 +4,7 @@ import com.datastax.astra.client.DataAPIClient;
 import com.datastax.astra.client.DataAPIOptions;
 import com.datastax.astra.client.Database;
 import com.datastax.astra.client.admin.DatabaseAdmin;
-import com.datastax.astra.internal.auth.UsernamePasswordTokenProvider;
+import com.datastax.astra.client.auth.UsernamePasswordTokenProvider;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
 
