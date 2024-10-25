@@ -120,6 +120,7 @@ abstract class DataApiTestBase {
 
         System.out.printf("Check existence of keyspace '%s'...", db.getKeyspaceName());
         DatabaseAdmin admin = db.getDatabaseAdmin();
+        System.out.println(" (DatabaseAdmin created) ");
         if (admin.keyspaceExists(db.getKeyspaceName())) {
             System.out.println("keyspace exists.");
         } else {
