@@ -50,7 +50,7 @@ public class DataApiInsertManyTest
             System.out.println(collectionNames.toList());
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
-                    e.getMessage());
+                    e);
             return 3;
         }
 
@@ -61,7 +61,7 @@ public class DataApiInsertManyTest
             testClient.initialize(skipInit, addIndexes);
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
-                    e.getMessage());
+                    e);
             return 3;
         }
         System.out.printf("Ok: Initialization of '%s' successful.\n", collectionName);
@@ -70,7 +70,8 @@ public class DataApiInsertManyTest
             testClient.validate();
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
-                    e.getMessage());
+                    e);
+            e.printStackTrace();
             return 4;
         }
         System.out.printf("Ok: Validation of '%s' successful.\n", collectionName);
@@ -80,7 +81,7 @@ public class DataApiInsertManyTest
             testClient.runWarmupAndTest(agentCount, rateLimitRPS);
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
-                    e.getMessage());
+                    e);
             return 5;
         }
 

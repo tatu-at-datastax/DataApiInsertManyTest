@@ -57,9 +57,10 @@ abstract class DataApiTestBase {
             description = "Collection name (default: 'insert_many_test')")
     String collectionName;
 
+    // Maximum allowed wrt Base64-encoded Blog  -> 8000 bytes
     @CommandLine.Option(names = {"-v", "--vector-length"},
-            description = "Vector size; 0 to disable (default: 1536)")
-    int vectorLength = 1536;
+            description = "Vector size; 0 to disable (default: 1500)")
+    int vectorLength = 1500;
 
     @CommandLine.Option(names = {"-x", "--index", "--add-indexes"}, arity="1",
             description = "Whether to Index (all) Fields or not (default: true)")
