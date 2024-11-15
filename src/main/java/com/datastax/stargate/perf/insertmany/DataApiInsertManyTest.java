@@ -97,6 +97,9 @@ public class DataApiInsertManyTest
 
     public static void main(String[] args)
     {
+        // Should default to true anyway but just in case...
+        DataAPIOptions.encodeDataApiVectorsAsBase64 = true;
+
         int exitCode = new CommandLine(new DataApiInsertManyTest()).execute(args);
         System.exit(exitCode);
     }
