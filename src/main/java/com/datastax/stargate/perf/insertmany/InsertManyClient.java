@@ -2,12 +2,12 @@ package com.datastax.stargate.perf.insertmany;
 
 import java.util.List;
 
-import com.datastax.astra.client.Collection;
-import com.datastax.astra.client.Database;
-import com.datastax.astra.client.model.CollectionOptions;
-import com.datastax.astra.client.model.DeleteResult;
-import com.datastax.astra.client.model.Document;
-import com.datastax.astra.client.model.SimilarityMetric;
+import com.datastax.astra.client.collections.Collection;
+import com.datastax.astra.client.databases.Database;
+import com.datastax.astra.client.collections.CollectionOptions;
+import com.datastax.astra.client.collections.results.CollectionDeleteResult;
+import com.datastax.astra.client.collections.documents.Document;
+import com.datastax.astra.client.core.vector.SimilarityMetric;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItem;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItemIdGenerator;
@@ -55,7 +55,7 @@ public class InsertManyClient
                 System.out.println("it does -- and since '--skipInit' specified, will skip recreation");
                 System.out.printf("  but need to truncate its contents, if any...");
                 coll = db.getCollection(collectionName);
-                DeleteResult dr = coll.deleteAll();
+                CollectionDeleteResult dr = coll.deleteAll();
                 System.out.printf(" deleted %d documents\n", dr.getDeletedCount());
             } else {
                 System.out.println("it does -- need to delete first");

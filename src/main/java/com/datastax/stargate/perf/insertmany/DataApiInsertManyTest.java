@@ -7,8 +7,8 @@ import java.util.stream.Stream;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
-import com.datastax.astra.client.DataAPIOptions;
-import com.datastax.astra.client.Database;
+import com.datastax.astra.client.core.options.DataAPIOptions;
+import com.datastax.astra.client.databases.Database;
 
 @CommandLine.Command(name = "DataApiInsertManyTest", mixinStandardHelpOptions=true)
 public class DataApiInsertManyTest

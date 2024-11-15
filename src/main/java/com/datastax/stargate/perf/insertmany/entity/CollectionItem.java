@@ -3,7 +3,7 @@ package com.datastax.stargate.perf.insertmany.entity;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.datastax.astra.client.model.Document;
+import com.datastax.astra.client.collections.documents.Document;
 
 /**
  * Lightweight wrapper for information needed to create a Document to insert

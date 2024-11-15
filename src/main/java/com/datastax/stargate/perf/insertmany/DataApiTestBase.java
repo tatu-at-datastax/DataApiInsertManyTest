@@ -1,10 +1,11 @@
 package com.datastax.stargate.perf.insertmany;
 
 import com.datastax.astra.client.DataAPIClient;
-import com.datastax.astra.client.DataAPIOptions;
-import com.datastax.astra.client.Database;
+import com.datastax.astra.client.DataAPIDestination;
 import com.datastax.astra.client.admin.DatabaseAdmin;
-import com.datastax.astra.client.auth.UsernamePasswordTokenProvider;
+import com.datastax.astra.client.core.auth.UsernamePasswordTokenProvider;
+import com.datastax.astra.client.core.options.DataAPIOptions;
+import com.datastax.astra.client.databases.Database;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
 
@@ -16,19 +17,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 abstract class DataApiTestBase {
     enum DataApiEnv {
-        PROD(DataAPIOptions.DataAPIDestination.ASTRA),
-        DEV(DataAPIOptions.DataAPIDestination.ASTRA_DEV),
-        TEST(DataAPIOptions.DataAPIDestination.ASTRA_TEST),
-        LOCAL(DataAPIOptions.DataAPIDestination.DSE)
+        PROD(DataAPIDestination.ASTRA),
+        DEV(DataAPIDestination.ASTRA_DEV),
+        TEST(DataAPIDestination.ASTRA_TEST),
+        LOCAL(DataAPIDestination.DSE)
         ;
 
-        private final DataAPIOptions.DataAPIDestination destination;
+        private final DataAPIDestination destination;
 
-        DataApiEnv(DataAPIOptions.DataAPIDestination d) {
+        DataApiEnv(DataAPIDestination d) {
             destination = d;
         }
 
-        public DataAPIOptions.DataAPIDestination destination() {
+        public DataAPIDestination destination() {
             return destination;
         }
     }

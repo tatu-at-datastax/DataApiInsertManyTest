@@ -1,6 +1,6 @@
 package com.datastax.stargate.perf.insertmany.agent;
 
-import com.datastax.astra.client.exception.DataApiException;
+import com.datastax.astra.client.exception.DataAPIException;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItem;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
@@ -46,7 +46,7 @@ public class InsertManyAgent
             try {
                 ok = items.insertItems(batch);
                 metrics.reportOkCall(this, System.currentTimeMillis() - startTime);
-            } catch (DataApiException ex) {
+            } catch (DataAPIException ex) {
                 metrics.reportErrorCall(this, System.currentTimeMillis() - startTime);
                 System.err.printf("WARN: exception for %s: (%s) %s\n",
                         this, ex.getErrorCode(), ex.getMessage());

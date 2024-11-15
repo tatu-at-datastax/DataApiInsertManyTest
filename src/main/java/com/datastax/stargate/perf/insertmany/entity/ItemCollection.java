@@ -3,15 +3,15 @@ package com.datastax.stargate.perf.insertmany.entity;
 import java.util.List;
 import java.util.Optional;
 
-import com.datastax.astra.client.Collection;
-import com.datastax.astra.client.exception.DataApiException;
-import com.datastax.astra.client.exception.TooManyDocumentsToCountException;
-import com.datastax.astra.client.model.DeleteResult;
-import com.datastax.astra.client.model.Document;
-import com.datastax.astra.client.model.Filter;
-import com.datastax.astra.client.model.InsertManyOptions;
-import com.datastax.astra.client.model.InsertManyResult;
-import com.datastax.astra.client.model.InsertOneResult;
+import com.datastax.astra.client.collections.Collection;
+import com.datastax.astra.client.collections.documents.Document;
+import com.datastax.astra.client.collections.exceptions.TooManyDocumentsToCountException;
+import com.datastax.astra.client.collections.options.CollectionInsertManyOptions;
+import com.datastax.astra.client.collections.results.CollectionDeleteResult;
+import com.datastax.astra.client.collections.results.CollectionInsertManyResult;
+import com.datastax.astra.client.collections.results.CollectionInsertOneResult;
+import com.datastax.astra.client.core.query.Filter;
+import com.datastax.astra.client.exception.DataAPIException;
 
 /**
  * Wrapper around a Collection of Documents.
@@ -19,10 +19,10 @@ import com.datastax.astra.client.model.InsertOneResult;
 public record ItemCollection(String name, Collection<Document> collection,
                              int vectorSize, boolean orderedInserts)
 {
-    private static final InsertManyOptions OPTIONS_ORDERED = new InsertManyOptions()
+    private static final CollectionInsertManyOptions OPTIONS_ORDERED = new CollectionInsertManyOptions()
             .ordered(true);
 
-    private static final InsertManyOptions OPTIONS_UNORDERED = new InsertManyOptions()
+    private static final CollectionInsertManyOptions OPTIONS_UNORDERED = new CollectionInsertManyOptions()
             .ordered(false);
 
     public void validateIsEmpty() {
@@ -41,8 +41,8 @@ public record ItemCollection(String name, Collection<Document> collection,
         }
     }
 
-    public void insertItem(CollectionItem item) throws DataApiException {
-        InsertOneResult result = collection.insertOne(item.toDocument());
+    public void insertItem(CollectionItem item) throws DataAPIException {
+        CollectionInsertOneResult result = collection.insertOne(item.toDocument());
         if (!item.idAsString().equals(result.getInsertedId())) {
             throw new IllegalStateException(String.format(
                     "Unexpected id for inserted document: expected %s, got %s",
@@ -50,21 +50,20 @@ public record ItemCollection(String name, Collection<Document> collection,
         }
     }
 
-    public boolean insertItems(List<CollectionItem> items) throws DataApiException {
+    public boolean insertItems(List<CollectionItem> items) throws DataAPIException {
         // Special case: 1 item, simply use "insertOne()" instead
         if (items.size() == 1) {
             insertItem(items.get(0));
             return true;
         }
-
         List<Document> itemList = items.stream().map(CollectionItem::toDocument).toList();
-        InsertManyOptions options = new InsertManyOptions()
+        CollectionInsertManyOptions options = new CollectionInsertManyOptions()
                 .ordered(orderedInserts);
-        if (items.size() > options.getChunkSize()) {
+        if (items.size() > options.chunkSize()) {
             options = options.chunkSize(items.size());
         }
 
-        InsertManyResult result = collection.insertMany(itemList, options);
+        CollectionInsertManyResult result = collection.insertMany(itemList, options);
         List<?> ids = result.getInsertedIds();
         if (ids == null || ids.size() != items.size()) {
             return false;
@@ -78,7 +77,7 @@ public record ItemCollection(String name, Collection<Document> collection,
     }
 
     public long deleteAll() {
-        DeleteResult dr = collection.deleteAll();
+        CollectionDeleteResult dr = collection.deleteAll();
         return dr.getDeletedCount();
     }
 
