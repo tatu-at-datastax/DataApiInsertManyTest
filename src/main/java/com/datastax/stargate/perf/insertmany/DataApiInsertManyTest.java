@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
-import com.datastax.astra.client.core.options.DataAPIOptions;
+import com.datastax.astra.client.core.options.DataAPIClientOptions;
 import com.datastax.astra.client.databases.Database;
 
 @CommandLine.Command(name = "DataApiInsertManyTest", mixinStandardHelpOptions=true)
@@ -32,7 +32,7 @@ public class DataApiInsertManyTest
     @Override
     public Integer call()
     {
-        maxDocsToInsert = Math.max(batchSize, DataAPIOptions.DEFAULT_MAX_CHUNK_SIZE);
+        maxDocsToInsert = Math.max(batchSize, DataAPIClientOptions.DEFAULT_MAX_CHUNK_SIZE);
 
         final AtomicInteger exitCode = new AtomicInteger(-1);
         Database db = initializeDB(exitCode);
@@ -91,15 +91,15 @@ public class DataApiInsertManyTest
     }
 
     @Override
-    protected DataAPIOptions.DataAPIClientOptionsBuilder dataApiOptions(
-            DataAPIOptions.DataAPIClientOptionsBuilder builder) {
+    protected DataAPIClientOptions.DataAPIClientOptionsBuilder dataApiOptions(
+            DataAPIClientOptions.DataAPIClientOptionsBuilder builder) {
         return builder.withMaxDocumentsInInsert(maxDocsToInsert);
     }
 
     public static void main(String[] args)
     {
         // Should default to true anyway but just in case...
-        DataAPIOptions.encodeDataApiVectorsAsBase64 = true;
+        DataAPIClientOptions.encodeDataApiVectorsAsBase64 = true;
 
         int exitCode = new CommandLine(new DataApiInsertManyTest()).execute(args);
         System.exit(exitCode);

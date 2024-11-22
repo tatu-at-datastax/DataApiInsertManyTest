@@ -4,7 +4,7 @@ import com.datastax.astra.client.DataAPIClient;
 import com.datastax.astra.client.DataAPIDestination;
 import com.datastax.astra.client.admin.DatabaseAdmin;
 import com.datastax.astra.client.core.auth.UsernamePasswordTokenProvider;
-import com.datastax.astra.client.core.options.DataAPIOptions;
+import com.datastax.astra.client.core.options.DataAPIClientOptions;
 import com.datastax.astra.client.databases.Database;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
@@ -136,15 +136,15 @@ abstract class DataApiTestBase {
 
     private DataAPIClient createClient(String token) {
         System.out.print("Creating DataAPIClient...");
-        DataAPIOptions.DataAPIClientOptionsBuilder optBuilder = DataAPIOptions.builder()
+        DataAPIClientOptions.DataAPIClientOptionsBuilder optBuilder = DataAPIClientOptions.builder()
                 .withDestination(env.destination());
         DataAPIClient client = new DataAPIClient(token, dataApiOptions(optBuilder).build());
         System.out.println(" created.");
         return client;
     }
 
-    protected DataAPIOptions.DataAPIClientOptionsBuilder dataApiOptions(
-            DataAPIOptions.DataAPIClientOptionsBuilder builder) {
+    protected DataAPIClientOptions.DataAPIClientOptionsBuilder dataApiOptions(
+            DataAPIClientOptions.DataAPIClientOptionsBuilder builder) {
         return builder;
     }
 }
