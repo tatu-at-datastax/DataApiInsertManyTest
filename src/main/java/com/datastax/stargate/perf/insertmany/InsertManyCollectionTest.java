@@ -17,19 +17,7 @@ public class InsertManyCollectionTest
     extends DataApiCollectionTestBase
     implements Callable<Integer>
 {
-    @Option(names = {"-b", "--batch-size"},
-            description = "Batch size for inserts (default: 20)")
-    int batchSize = 20;
-
-    @Option(names = {"-r", "--rate", "--rate-limit"},
-            description = "Rate limit as RPS (default: 100)")
-    int rateLimitRPS = 100;
-
-    @Option(names = {"-a", "--agent-count"},
-            description = "Agent count (also: thread count) (default: 10)")
-    int agentCount = 10;
-
-    int maxDocsToInsert;
+    protected int maxDocsToInsert;
 
     @Override
     public Integer call()

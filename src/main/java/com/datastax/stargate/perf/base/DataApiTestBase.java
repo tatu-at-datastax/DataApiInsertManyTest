@@ -36,6 +36,8 @@ public abstract class DataApiTestBase {
 
     final static String TOKEN_PREFIX = "AstraCS:";
 
+    // // // Connection settings, initialization
+
     @CommandLine.Option(names = {"-t", "--token"},
             description = "Astra Token (starts with 'AstraCS:' if used)")
     protected String astraToken = "";
@@ -52,18 +54,34 @@ public abstract class DataApiTestBase {
             description = "Keyspace (default 'default_keyspace')")
     protected String ns = "default_keyspace";
 
-    // Maximum allowed wrt Base64-encoded Blog  -> 8000 bytes
-    @CommandLine.Option(names = {"-v", "--vector-length"},
-            description = "Vector size; 0 to disable (default: 1500)")
-    protected int vectorLength = 1500;
+    @CommandLine.Option(names = "--skip-init", arity="0",
+            description = "Skip initialization (use existing collection)")
+    protected boolean skipInit = false;
+
+    // // // Operational settings (concurrency, rate limiting, batch size)
+
+    @CommandLine.Option(names = {"-a", "--agent-count"},
+            description = "Agent count (also: thread count) (default: 10)")
+    protected int agentCount = 10;
+
+    @CommandLine.Option(names = {"-b", "--batch-size"},
+            description = "Batch size for inserts (default: 20)")
+    protected int batchSize = 20;
 
     @CommandLine.Option(names = {"-o", "--ordered", "--ordered-inserts"}, arity="1",
             description = "Whether inserts are Ordered (default: false)")
     protected boolean orderedInserts = false;
 
-    @CommandLine.Option(names = "--skip-init", arity="0",
-            description = "Skip initialization (use existing collection)")
-    protected boolean skipInit = false;
+    @CommandLine.Option(names = {"-r", "--rate", "--rate-limit"},
+            description = "Rate limit as RPS (default: 100)")
+    protected int rateLimitRPS = 100;
+
+    // // // Content limits/settings
+
+    // Maximum allowed wrt Base64-encoded Blog  -> 8000 bytes
+    @CommandLine.Option(names = {"-v", "--vector-length"},
+            description = "Vector size; 0 to disable (default: 1500)")
+    protected int vectorLength = 1500;
 
     protected Database initializeDB(AtomicInteger exitCode)
     {
