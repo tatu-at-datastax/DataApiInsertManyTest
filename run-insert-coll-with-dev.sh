@@ -1,3 +1,3 @@
 #!/bin/sh
 
-java -jar target/DataApiInsertManyTest-*.jar -t "$TOKEN_DEV" -d "$DB_DEV" -e DEV $*
+java -cp target/DataApiInsertManyTest-*.jar cmd.InsertManyCollectionWrapper -t "$TOKEN_DEV" -d "$DB_DEV" -e DEV $*

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-java -jar target/DataApiInsertManyTest-*.jar  -e LOCAL $*
+java -cp target/DataApiInsertManyTest-*.jar cmd.InsertManyCollectionWrapper  -e LOCAL $*
