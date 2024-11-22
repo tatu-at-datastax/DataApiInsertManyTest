@@ -1,4 +1,4 @@
-package com.datastax.stargate.perf.insertmany;
+package com.datastax.stargate.perf.base;
 
 import com.datastax.astra.client.DataAPIClient;
 import com.datastax.astra.client.DataAPIDestination;
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Base class for various tests
  */
-abstract class DataApiTestBase {
+public abstract class DataApiTestBase {
     enum DataApiEnv {
         PROD(DataAPIDestination.ASTRA),
         DEV(DataAPIDestination.ASTRA_DEV),
@@ -38,41 +38,32 @@ abstract class DataApiTestBase {
 
     @CommandLine.Option(names = {"-t", "--token"},
             description = "Astra Token (starts with 'AstraCS:' if used)")
-    String astraToken = "";
+    protected String astraToken = "";
 
     @CommandLine.Option(names = {"-d", "--db", "--db-id"},
             description = "Database ID (UUID)")
-    String dbIdAsString = "";
+    protected String dbIdAsString = "";
 
     @CommandLine.Option(names = {"-e", "--env"},
             description = "Astra env (PROD [default], DEV, TEST, LOCAL)")
-    DataApiEnv env = DataApiEnv.PROD;
+    protected DataApiEnv env = DataApiEnv.PROD;
 
     @CommandLine.Option(names = {"-k", "--keyspace", "--namespace"},
             description = "Keyspace (default 'default_keyspace')")
-    String ns = "default_keyspace";
-
-    @CommandLine.Option(names = {"-c", "--collection-name"},
-            defaultValue = "insert_many_test",
-            description = "Collection name (default: 'insert_many_test')")
-    String collectionName;
+    protected String ns = "default_keyspace";
 
     // Maximum allowed wrt Base64-encoded Blog  -> 8000 bytes
     @CommandLine.Option(names = {"-v", "--vector-length"},
             description = "Vector size; 0 to disable (default: 1500)")
-    int vectorLength = 1500;
-
-    @CommandLine.Option(names = {"-x", "--index", "--add-indexes"}, arity="1",
-            description = "Whether to Index (all) Fields or not (default: true)")
-    boolean addIndexes = true;
+    protected int vectorLength = 1500;
 
     @CommandLine.Option(names = {"-o", "--ordered", "--ordered-inserts"}, arity="1",
             description = "Whether inserts are Ordered (default: false)")
-    boolean orderedInserts = false;
+    protected boolean orderedInserts = false;
 
     @CommandLine.Option(names = "--skip-init", arity="0",
             description = "Skip initialization (use existing collection)")
-    boolean skipInit = false;
+    protected boolean skipInit = false;
 
     protected Database initializeDB(AtomicInteger exitCode)
     {
@@ -134,7 +125,7 @@ abstract class DataApiTestBase {
         return db;
     }
 
-    private DataAPIClient createClient(String token) {
+    protected  DataAPIClient createClient(String token) {
         System.out.print("Creating DataAPIClient...");
         DataAPIClientOptions.DataAPIClientOptionsBuilder optBuilder = DataAPIClientOptions.builder()
                 .withDestination(env.destination());

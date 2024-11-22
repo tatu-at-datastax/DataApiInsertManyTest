@@ -4,6 +4,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import com.datastax.stargate.perf.base.DataApiCollectionTestBase;
+import com.datastax.stargate.perf.base.DataApiTestBase;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -12,7 +14,7 @@ import com.datastax.astra.client.databases.Database;
 
 @CommandLine.Command(name = "InsertManyCollectionTest", mixinStandardHelpOptions=true)
 public class InsertManyCollectionTest
-    extends DataApiTestBase
+    extends DataApiCollectionTestBase
     implements Callable<Integer>
 {
     @Option(names = {"-b", "--batch-size"},
