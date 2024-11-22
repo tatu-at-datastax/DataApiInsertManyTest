@@ -10,8 +10,8 @@ import picocli.CommandLine.Option;
 import com.datastax.astra.client.core.options.DataAPIClientOptions;
 import com.datastax.astra.client.databases.Database;
 
-@CommandLine.Command(name = "DataApiInsertManyTest", mixinStandardHelpOptions=true)
-public class DataApiInsertManyTest
+@CommandLine.Command(name = "InsertManyCollectionTest", mixinStandardHelpOptions=true)
+public class InsertManyCollectionTest
     extends DataApiTestBase
     implements Callable<Integer>
 {
@@ -101,7 +101,7 @@ public class DataApiInsertManyTest
         // Should default to true anyway but just in case...
         DataAPIClientOptions.encodeDataApiVectorsAsBase64 = true;
 
-        int exitCode = new CommandLine(new DataApiInsertManyTest()).execute(args);
+        int exitCode = new CommandLine(new InsertManyCollectionTest()).execute(args);
         System.exit(exitCode);
     }
 }
