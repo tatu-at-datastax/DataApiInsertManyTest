@@ -13,9 +13,9 @@ import com.datastax.astra.client.tables.TableDefinition;
 import com.datastax.astra.client.tables.columns.ColumnDefinitionVector;
 import com.datastax.astra.client.tables.columns.ColumnTypes;
 import com.datastax.astra.client.tables.ddl.CreateTableOptions;
-import com.datastax.stargate.perf.insertmany.entity.CollectionItem;
-import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
-import com.datastax.stargate.perf.insertmany.entity.CollectionItemIdGenerator;
+import com.datastax.stargate.perf.insertmany.entity.ContainerItem;
+import com.datastax.stargate.perf.insertmany.entity.ContainerItemGenerator;
+import com.datastax.stargate.perf.insertmany.entity.ContainerItemIdGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ContainerType;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
@@ -181,9 +181,9 @@ public class InsertManyClient
                 containerDesc(), desc);
 
         final long start = System.currentTimeMillis();
-        Table<CollectionItem> table = db.createTable(containerName, tableDef,
+        Table<ContainerItem> table = db.createTable(containerName, tableDef,
                 options,
-                CollectionItem.class);
+                ContainerItem.class);
         System.out.printf("created (in %s))\n",
                 _secs(System.currentTimeMillis() - start));
         return new ItemTable(containerName, table, vectorSize, orderedInserts);
@@ -195,19 +195,19 @@ public class InsertManyClient
      * all Items before returning.
      */
     public void validate() {
-        CollectionItemIdGenerator idGenerator = CollectionItemIdGenerator.decreasingCycleGenerator(0);
-        CollectionItemGenerator itemGen = new CollectionItemGenerator(idGenerator, vectorSize);
+        ContainerItemIdGenerator idGenerator = ContainerItemIdGenerator.decreasingCycleGenerator(0);
+        ContainerItemGenerator itemGen = new ContainerItemGenerator(idGenerator, vectorSize);
 
         System.out.printf("  will insert %d documents, one by one:\n", VALIDATE_SINGLE_ITEMS_TO_INSERT);
         for (int i = 0; i < VALIDATE_SINGLE_ITEMS_TO_INSERT; ++i) {
             final long start = System.currentTimeMillis();
-            CollectionItem item = itemGen.generateSingle();
+            ContainerItem item = itemGen.generateSingle();
             itemContainer.insertItem(item);
             System.out.printf("    inserted item #%d/%d: %s (in %s)",
                     i+1, VALIDATE_SINGLE_ITEMS_TO_INSERT, item.idAsString(),
                     _secs(System.currentTimeMillis() - start));
             // fetch to validate
-            CollectionItem result = itemContainer.findItem(item.idAsString());
+            ContainerItem result = itemContainer.findItem(item.idAsString());
             verifyItem(item, result);
             System.out.println("(verified: OK)");
         }
@@ -218,14 +218,14 @@ public class InsertManyClient
 
         for (int i = 0; i < VALIDATE_BATCHES_TO_INSERT; ++i) {
             final long start = System.currentTimeMillis();
-            List<CollectionItem> items = itemGen.generate(batchSize);
+            List<ContainerItem> items = itemGen.generate(batchSize);
             itemContainer.insertItems(items);
             System.out.printf("    inserted Batch #%d/%d (in %s)",
                     i+1, VALIDATE_BATCHES_TO_INSERT,
                     _secs(System.currentTimeMillis() - start));
             // Validate one by one
-            for (CollectionItem item : items) {
-                CollectionItem result = itemContainer.findItem(item.idAsString());
+            for (ContainerItem item : items) {
+                ContainerItem result = itemContainer.findItem(item.idAsString());
                 verifyItem(item, result);
             }
             System.out.println("(verified: OK)");
@@ -253,8 +253,8 @@ public class InsertManyClient
     public void runWarmupAndTest(int threadCount, int testMaxRPS)
         throws InterruptedException
     {
-        final CollectionItemGenerator itemGenerator = new CollectionItemGenerator(
-                CollectionItemIdGenerator.increasingCycleGenerator(0),
+        final ContainerItemGenerator itemGenerator = new ContainerItemGenerator(
+                ContainerItemIdGenerator.increasingCycleGenerator(0),
                 vectorSize);
         final TestPhaseRunner testRunner = new TestPhaseRunner(threadCount,
                 itemContainer, itemGenerator, batchSize);
@@ -268,13 +268,13 @@ public class InsertManyClient
                 testMaxRPS);
     }
 
-    private static void verifyItem(CollectionItem expected, CollectionItem actual) {
+    private static void verifyItem(ContainerItem expected, ContainerItem actual) {
         if (actual == null) {
             throw new IllegalStateException("Failed to find inserted document with key '"
                     +expected.idAsString()+"'");
         }
         // Otherwise verify fields.
-        CollectionItem.verifySimilarity(expected, actual);
+        ContainerItem.verifySimilarity(expected, actual);
     }
 
     private static String _secs(long msecs) {

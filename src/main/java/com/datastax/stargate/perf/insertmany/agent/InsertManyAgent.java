@@ -1,9 +1,8 @@
 package com.datastax.stargate.perf.insertmany.agent;
 
 import com.datastax.astra.client.exception.DataAPIException;
-import com.datastax.stargate.perf.insertmany.entity.CollectionItem;
-import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
-import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
+import com.datastax.stargate.perf.insertmany.entity.ContainerItem;
+import com.datastax.stargate.perf.insertmany.entity.ContainerItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
 import io.github.bucket4j.Bucket;
 
@@ -19,11 +18,11 @@ public class InsertManyAgent
 
     private final ItemContainer items;
 
-    private final CollectionItemGenerator itemGenerator;
+    private final ContainerItemGenerator itemGenerator;
 
     private final int batchSize;
 
-    public InsertManyAgent(int id, ItemContainer items, CollectionItemGenerator itemGenerator,
+    public InsertManyAgent(int id, ItemContainer items, ContainerItemGenerator itemGenerator,
                            int batchSize) {
         this.id = id;
         this.items = items;
@@ -41,7 +40,7 @@ public class InsertManyAgent
                 waitMsecs(10L);
                 continue;
             }
-            List<CollectionItem> batch = itemGenerator.generate(batchSize);
+            List<ContainerItem> batch = itemGenerator.generate(batchSize);
             final long startTime = System.currentTimeMillis();
             Boolean ok = null;
             try {

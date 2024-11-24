@@ -1,23 +1,16 @@
 package com.datastax.stargate.perf.insertmany.entity;
 
-import com.datastax.astra.client.collections.Collection;
 import com.datastax.astra.client.collections.documents.Document;
-import com.datastax.astra.client.collections.exceptions.TooManyDocumentsToCountException;
 import com.datastax.astra.client.collections.options.CollectionInsertManyOptions;
-import com.datastax.astra.client.collections.results.CollectionDeleteResult;
-import com.datastax.astra.client.collections.results.CollectionInsertManyResult;
-import com.datastax.astra.client.collections.results.CollectionInsertOneResult;
-import com.datastax.astra.client.core.query.Filter;
 import com.datastax.astra.client.exception.DataAPIException;
 import com.datastax.astra.client.tables.Table;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Wrapper around an API Table.
  */
-public record ItemTable(String name, Table<CollectionItem> table,
+public record ItemTable(String name, Table<ContainerItem> table,
                         int vectorSize, boolean orderedInserts)
     implements ItemContainer
 {
@@ -43,7 +36,7 @@ public record ItemTable(String name, Table<CollectionItem> table,
     }
 
     @Override
-    public void insertItem(CollectionItem item) throws DataAPIException {
+    public void insertItem(ContainerItem item) throws DataAPIException {
         /*
         CollectionInsertOneResult result = table.insertOne(item.toDocument());
         if (!item.idAsString().equals(result.getInsertedId())) {
@@ -55,13 +48,13 @@ public record ItemTable(String name, Table<CollectionItem> table,
     }
 
     @Override
-    public boolean insertItems(List<CollectionItem> items) throws DataAPIException {
+    public boolean insertItems(List<ContainerItem> items) throws DataAPIException {
         // Special case: 1 item, simply use "insertOne()" instead
         if (items.size() == 1) {
             insertItem(items.get(0));
             return true;
         }
-        List<Document> itemList = items.stream().map(CollectionItem::toDocument).toList();
+        List<Document> itemList = items.stream().map(ContainerItem::toDocument).toList();
         CollectionInsertManyOptions options = new CollectionInsertManyOptions()
                 .ordered(orderedInserts);
         if (items.size() > options.chunkSize()) {
@@ -80,7 +73,7 @@ public record ItemTable(String name, Table<CollectionItem> table,
     }
 
     @Override
-    public CollectionItem findItem(String idAsSring) {
+    public ContainerItem findItem(String idAsSring) {
         /*
         Optional<Document> doc = collection.findOne(Filter.findById(idAsSring));
         return CollectionItem.fromDocument(doc);

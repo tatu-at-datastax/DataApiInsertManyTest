@@ -39,7 +39,7 @@ public record ItemCollection(String name, Collection<Document> collection,
     }
 
     @Override
-    public void insertItem(CollectionItem item) throws DataAPIException {
+    public void insertItem(ContainerItem item) throws DataAPIException {
         CollectionInsertOneResult result = collection.insertOne(item.toDocument());
         if (!item.idAsString().equals(result.getInsertedId())) {
             throw new IllegalStateException(String.format(
@@ -49,13 +49,13 @@ public record ItemCollection(String name, Collection<Document> collection,
     }
 
     @Override
-    public boolean insertItems(List<CollectionItem> items) throws DataAPIException {
+    public boolean insertItems(List<ContainerItem> items) throws DataAPIException {
         // Special case: 1 item, simply use "insertOne()" instead
         if (items.size() == 1) {
             insertItem(items.get(0));
             return true;
         }
-        List<Document> itemList = items.stream().map(CollectionItem::toDocument).toList();
+        List<Document> itemList = items.stream().map(ContainerItem::toDocument).toList();
         CollectionInsertManyOptions options = new CollectionInsertManyOptions()
                 .ordered(orderedInserts);
         if (items.size() > options.chunkSize()) {
@@ -71,9 +71,9 @@ public record ItemCollection(String name, Collection<Document> collection,
     }
 
     @Override
-    public CollectionItem findItem(String idAsSring) {
+    public ContainerItem findItem(String idAsSring) {
         Optional<Document> doc = collection.findOne(Filter.findById(idAsSring));
-        return CollectionItem.fromDocument(doc);
+        return ContainerItem.fromDocument(doc);
     }
 
     @Override

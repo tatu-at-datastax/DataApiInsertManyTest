@@ -2,8 +2,7 @@ package com.datastax.stargate.perf.insertmany;
 
 import com.datastax.stargate.perf.insertmany.agent.InsertManyAgent;
 import com.datastax.stargate.perf.insertmany.agent.MetricsCollector;
-import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
-import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
+import com.datastax.stargate.perf.insertmany.entity.ContainerItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
 import io.github.bucket4j.Bucket;
 
@@ -19,11 +18,11 @@ import java.util.concurrent.TimeUnit;
 public class TestPhaseRunner {
    private final int agentCount;
    private final ItemContainer items;
-   private final CollectionItemGenerator itemGenerator;
+   private final ContainerItemGenerator itemGenerator;
    private final int batchSize;
 
    public TestPhaseRunner(int agentCount,
-                          ItemContainer items, CollectionItemGenerator itemGenerator,
+                          ItemContainer items, ContainerItemGenerator itemGenerator,
                           int batchSize) {
         this.agentCount = agentCount;
         this.items = items;
