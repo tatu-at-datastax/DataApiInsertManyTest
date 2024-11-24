@@ -18,13 +18,9 @@ import com.datastax.astra.client.exception.DataAPIException;
  */
 public record ItemCollection(String name, Collection<Document> collection,
                              int vectorSize, boolean orderedInserts)
+    implements ItemContainer
 {
-    private static final CollectionInsertManyOptions OPTIONS_ORDERED = new CollectionInsertManyOptions()
-            .ordered(true);
-
-    private static final CollectionInsertManyOptions OPTIONS_UNORDERED = new CollectionInsertManyOptions()
-            .ordered(false);
-
+    @Override
     public void validateIsEmpty() {
         final int maxCount = 100;
         long count = countItems(maxCount);
@@ -33,6 +29,7 @@ public record ItemCollection(String name, Collection<Document> collection,
         }
     }
 
+    @Override
     public long countItems(int maxCount) {
         try {
             return collection.countDocuments(maxCount);
@@ -41,6 +38,7 @@ public record ItemCollection(String name, Collection<Document> collection,
         }
     }
 
+    @Override
     public void insertItem(CollectionItem item) throws DataAPIException {
         CollectionInsertOneResult result = collection.insertOne(item.toDocument());
         if (!item.idAsString().equals(result.getInsertedId())) {
@@ -50,6 +48,7 @@ public record ItemCollection(String name, Collection<Document> collection,
         }
     }
 
+    @Override
     public boolean insertItems(List<CollectionItem> items) throws DataAPIException {
         // Special case: 1 item, simply use "insertOne()" instead
         if (items.size() == 1) {
@@ -71,11 +70,13 @@ public record ItemCollection(String name, Collection<Document> collection,
         return true;
     }
 
+    @Override
     public CollectionItem findItem(String idAsSring) {
         Optional<Document> doc = collection.findOne(Filter.findById(idAsSring));
         return CollectionItem.fromDocument(doc);
     }
 
+    @Override
     public long deleteAll() {
         CollectionDeleteResult dr = collection.deleteAll();
         return dr.getDeletedCount();

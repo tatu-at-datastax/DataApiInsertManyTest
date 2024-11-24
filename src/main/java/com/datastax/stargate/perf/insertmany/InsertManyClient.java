@@ -1,17 +1,19 @@
 package com.datastax.stargate.perf.insertmany;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.datastax.astra.client.collections.Collection;
 import com.datastax.astra.client.databases.Database;
 import com.datastax.astra.client.collections.CollectionOptions;
-import com.datastax.astra.client.collections.results.CollectionDeleteResult;
 import com.datastax.astra.client.collections.documents.Document;
 import com.datastax.astra.client.core.vector.SimilarityMetric;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItem;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItemIdGenerator;
+import com.datastax.stargate.perf.insertmany.entity.ContainerType;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
+import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
 
 /**
  * Wrapper around access to test Collections for Data API
@@ -23,22 +25,62 @@ public class InsertManyClient
     final private static int VALIDATE_BATCHES_TO_INSERT = 5;
 
     private final Database db;
-    private final String collectionName;
+    private final ContainerType containerType;
+    private final String containerName;
     private final int vectorSize;
     private final boolean orderedInserts;
     private final int batchSize;
 
-    private ItemCollection itemCollection;
+    private ItemContainer itemContainer;
 
-    public InsertManyClient(Database db, String collectionName,
+    public InsertManyClient(Database db, ContainerType containerType,
+                            String containerName,
                             int vectorSize, boolean orderedInserts,
                             int batchSize) {
         this.db = db;
-        this.collectionName = collectionName;
+        this.containerType = Objects.requireNonNull(containerType);
+        this.containerName = Objects.requireNonNull(containerName);
         this.vectorSize = vectorSize;
         this.orderedInserts = orderedInserts;
         this.batchSize = batchSize;
     }
+
+    private String containerDesc() {
+        return containerType.desc(containerName);
+    }
+
+    private boolean containerExists() {
+        return switch (containerType) {
+            case COLLECTION -> db.collectionExists(containerName);
+            case TABLE -> db.tableExists(containerName);
+        };
+    }
+
+    private ItemContainer fetchContainer() {
+        return switch (containerType) {
+            case COLLECTION -> new ItemCollection(containerName,
+                    db.getCollection(containerName),
+                    vectorSize, orderedInserts);
+            case TABLE -> /*
+                new ItemTable(containerName,
+                    db.getCollection(containerName),
+                    vectorSize, orderedInserts);
+                    */
+                    null;
+        };
+    }
+
+    private void dropContainer() {
+        switch (containerType) {
+            case COLLECTION:
+                db.dropCollection(containerName);
+                break;
+            case TABLE:
+            default:
+                db.dropTable(containerName);
+        }
+    }
+
 
     /**
      * Method that will (re)create Collection as necessary; clear (if not deleted).
@@ -47,20 +89,20 @@ public class InsertManyClient
     public void initialize(boolean skipCollectionRecreate,
                            boolean addIndexes) throws Exception
     {
-        System.out.printf("  checking if collection '%s' exists: ", collectionName);
-        Collection<Document> coll = null;
+        System.out.printf("  checking if %s exists: ", containerDesc());
+        ItemContainer container = null;
 
-        if (db.collectionExists(collectionName)) {
+        if (containerExists()) {
             if (skipCollectionRecreate) {
                 System.out.println("it does -- and since '--skipInit' specified, will skip recreation");
                 System.out.printf("  but need to truncate its contents, if any...");
-                coll = db.getCollection(collectionName);
-                CollectionDeleteResult dr = coll.deleteAll();
-                System.out.printf(" deleted %d documents\n", dr.getDeletedCount());
+                container = fetchContainer();
+                long deleted = container.deleteAll();
+                System.out.printf(" deleted %d documents\n", deleted);
             } else {
                 System.out.println("it does -- need to delete first");
-                db.dropCollection(collectionName);
-                System.out.printf("Collection '%s' deleted: will wait for 3 seconds...\n", collectionName);
+                dropContainer();
+                System.out.printf("%s deleted: will wait for 3 seconds...\n", containerDesc());
                 try {
                     Thread.sleep(3000L);
                 } catch (InterruptedException e) { }
@@ -69,7 +111,7 @@ public class InsertManyClient
             System.out.println("does not -- no need to delete");
         }
 
-        if (coll == null) {
+        if (container == null) {
             CollectionOptions.CollectionOptionsBuilder opts = CollectionOptions.builder();
             String desc;
             if (vectorSize > 0) {
@@ -84,19 +126,20 @@ public class InsertManyClient
                 desc += ", index: NONE";
                 opts = opts.indexingDeny("*");
             }
-            System.out.printf("Will (re)create collection '%s' (%s): ",
-                    collectionName, desc);
+            System.out.printf("Will (re)create %s (%s): ",
+                    containerDesc(), desc);
             final CollectionOptions collOpts = opts.build();
 
             final long start = System.currentTimeMillis();
-            coll = db.createCollection(collectionName, collOpts);
+            Collection<Document> coll = db.createCollection(containerName, collOpts);
             System.out.printf("created (in %s)); options = %s\n",
                     _secs(System.currentTimeMillis() - start),
                     coll.getDefinition().getOptions());
+            container = new ItemCollection(containerName, coll, vectorSize, orderedInserts);
         }
-        itemCollection = new ItemCollection(collectionName, coll, vectorSize, orderedInserts);
+        itemContainer = container;
         // And let's verify Collection does exist; do by checking it's empty
-        itemCollection.validateIsEmpty();
+        itemContainer.validateIsEmpty();
     }
 
     /**
@@ -112,12 +155,12 @@ public class InsertManyClient
         for (int i = 0; i < VALIDATE_SINGLE_ITEMS_TO_INSERT; ++i) {
             final long start = System.currentTimeMillis();
             CollectionItem item = itemGen.generateSingle();
-            itemCollection.insertItem(item);
+            itemContainer.insertItem(item);
             System.out.printf("    inserted item #%d/%d: %s (in %s)",
                     i+1, VALIDATE_SINGLE_ITEMS_TO_INSERT, item.idAsString(),
                     _secs(System.currentTimeMillis() - start));
             // fetch to validate
-            CollectionItem result = itemCollection.findItem(item.idAsString());
+            CollectionItem result = itemContainer.findItem(item.idAsString());
             verifyItem(item, result);
             System.out.println("(verified: OK)");
         }
@@ -129,13 +172,13 @@ public class InsertManyClient
         for (int i = 0; i < VALIDATE_BATCHES_TO_INSERT; ++i) {
             final long start = System.currentTimeMillis();
             List<CollectionItem> items = itemGen.generate(batchSize);
-            itemCollection.insertItems(items);
+            itemContainer.insertItems(items);
             System.out.printf("    inserted Batch #%d/%d (in %s)",
                     i+1, VALIDATE_BATCHES_TO_INSERT,
                     _secs(System.currentTimeMillis() - start));
             // Validate one by one
             for (CollectionItem item : items) {
-                CollectionItem result = itemCollection.findItem(item.idAsString());
+                CollectionItem result = itemContainer.findItem(item.idAsString());
                 verifyItem(item, result);
             }
             System.out.println("(verified: OK)");
@@ -146,7 +189,7 @@ public class InsertManyClient
 
         System.out.printf("  all inserted and verified: should now have %d documents, verify: ", expCount);
 
-        final long actCount = itemCollection.countItems(expCount + 100);
+        final long actCount = itemContainer.countItems(expCount + 100);
         if (expCount != actCount) {
             throw new IllegalStateException("Expected to have "+expCount+" documents, had "+actCount);
         }
@@ -154,9 +197,9 @@ public class InsertManyClient
 
         // And all this being done, let's delete all items
         System.out.printf("  and now let's delete all items: ");
-        long count = itemCollection.deleteAll();
+        long count = itemContainer.deleteAll();
         System.out.printf(" deleted %d documents; validate: ", count);
-        itemCollection.validateIsEmpty();
+        itemContainer.validateIsEmpty();
         System.out.println("OK, now empty");
     }
 
@@ -167,7 +210,7 @@ public class InsertManyClient
                 CollectionItemIdGenerator.increasingCycleGenerator(0),
                 vectorSize);
         final TestPhaseRunner testRunner = new TestPhaseRunner(threadCount,
-                itemCollection, itemGenerator, batchSize);
+                itemContainer, itemGenerator, batchSize);
 
         // Warm-up with only 25% of full RPS; for 10 seconds
         testRunner.runPhase("Warm-up", 10, java.util.concurrent.TimeUnit.SECONDS,

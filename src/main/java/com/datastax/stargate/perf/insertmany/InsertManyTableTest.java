@@ -1,21 +1,19 @@
 package com.datastax.stargate.perf.insertmany;
 
+import com.datastax.astra.client.core.options.DataAPIClientOptions;
+import com.datastax.astra.client.databases.Database;
+import com.datastax.stargate.perf.base.DataApiCollectionTestBase;
+import com.datastax.stargate.perf.base.DataApiTableTestBase;
+import com.datastax.stargate.perf.insertmany.entity.ContainerType;
+import picocli.CommandLine;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import com.datastax.stargate.perf.base.DataApiCollectionTestBase;
-import com.datastax.stargate.perf.base.DataApiTestBase;
-import com.datastax.stargate.perf.insertmany.entity.ContainerType;
-import picocli.CommandLine;
-import picocli.CommandLine.Option;
-
-import com.datastax.astra.client.core.options.DataAPIClientOptions;
-import com.datastax.astra.client.databases.Database;
-
-@CommandLine.Command(name = "InsertManyCollectionTest", mixinStandardHelpOptions=true)
-public class InsertManyCollectionTest
-    extends DataApiCollectionTestBase
+@CommandLine.Command(name = "InsertManyTableTest", mixinStandardHelpOptions=true)
+public class InsertManyTableTest
+    extends DataApiTableTestBase
     implements Callable<Integer>
 {
     protected int maxDocsToInsert;
@@ -33,30 +31,36 @@ public class InsertManyCollectionTest
         }
 
 
-        System.out.printf("Fetch names of existing Collections in the database: ");
-        Stream<String> collectionNames;
+        System.out.printf("Fetch names of existing Tables in the database: ");
+        Stream<String> tableNames;
 
         try {
-            collectionNames	= db.listCollectionNames();
-            System.out.println(collectionNames.toList());
+            tableNames	= db.listTableNames();
+            System.out.println(tableNames.toList());
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
             return 3;
         }
 
-        InsertManyClient testClient = new InsertManyClient(db, ContainerType.COLLECTION,
-                collectionName, vectorLength, orderedInserts, batchSize);
-        System.out.printf("Initialize test client (collection '%s'):\n", collectionName);
+        InsertManyClient testClient = new InsertManyClient(db, ContainerType.TABLE,
+                tableName, vectorLength, orderedInserts, batchSize);
+
+        if (true) {
+            System.out.printf("INIT AND REST NOT YET IMPLEMENTED -- QUITTING!");
+            return -1;
+        }
+
+        System.out.printf("Initialize test client (table '%s'):\n", tableName);
         try {
-            testClient.initialize(skipInit, addIndexes);
+            testClient.initialize(skipInit, true);
         } catch (Exception e) {
             System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
             return 3;
         }
-        System.out.printf("Ok: Initialization of '%s' successful.\n", collectionName);
-        System.out.printf("Validate that inserts to '%s' work.\n", collectionName);
+        System.out.printf("Ok: Initialization of '%s' successful.\n", tableName);
+        System.out.printf("Validate that inserts to '%s' work.\n", tableName);
         try {
             testClient.validate();
         } catch (Exception e) {
@@ -64,9 +68,9 @@ public class InsertManyCollectionTest
                     e);
             return 4;
         }
-        System.out.printf("Ok: Validation of '%s' successful.\n", collectionName);
+        System.out.printf("Ok: Validation of '%s' successful.\n", tableName);
 
-        System.out.printf("Start warm-up, run test against '%s'.\n", collectionName);
+        System.out.printf("Start warm-up, run test against '%s'.\n", tableName);
         try {
             testClient.runWarmupAndTest(agentCount, rateLimitRPS);
         } catch (Exception e) {
@@ -91,7 +95,7 @@ public class InsertManyCollectionTest
         // Should default to true anyway but just in case...
         DataAPIClientOptions.encodeDataApiVectorsAsBase64 = true;
 
-        int exitCode = new CommandLine(new InsertManyCollectionTest()).execute(args);
+        int exitCode = new CommandLine(new InsertManyTableTest()).execute(args);
         System.exit(exitCode);
     }
 }

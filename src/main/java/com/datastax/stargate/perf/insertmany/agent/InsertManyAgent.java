@@ -4,6 +4,7 @@ import com.datastax.astra.client.exception.DataAPIException;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItem;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
+import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
 import io.github.bucket4j.Bucket;
 
 import java.util.List;
@@ -16,13 +17,13 @@ public class InsertManyAgent
 {
     public final int id;
 
-    private final ItemCollection items;
+    private final ItemContainer items;
 
     private final CollectionItemGenerator itemGenerator;
 
     private final int batchSize;
 
-    public InsertManyAgent(int id, ItemCollection items, CollectionItemGenerator itemGenerator,
+    public InsertManyAgent(int id, ItemContainer items, CollectionItemGenerator itemGenerator,
                            int batchSize) {
         this.id = id;
         this.items = items;
