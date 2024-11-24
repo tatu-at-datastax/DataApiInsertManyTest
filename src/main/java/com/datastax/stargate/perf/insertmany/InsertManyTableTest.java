@@ -46,11 +46,6 @@ public class InsertManyTableTest
         InsertManyClient testClient = new InsertManyClient(db, ContainerType.TABLE,
                 tableName, vectorLength, orderedInserts, batchSize);
 
-        if (true) {
-            System.out.printf("INIT AND REST NOT YET IMPLEMENTED -- QUITTING!");
-            return -1;
-        }
-
         System.out.printf("Initialize test client (table '%s'):\n", tableName);
         try {
             testClient.initialize(skipInit, true);

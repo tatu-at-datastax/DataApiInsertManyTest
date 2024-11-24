@@ -8,12 +8,18 @@ import com.datastax.astra.client.databases.Database;
 import com.datastax.astra.client.collections.CollectionOptions;
 import com.datastax.astra.client.collections.documents.Document;
 import com.datastax.astra.client.core.vector.SimilarityMetric;
+import com.datastax.astra.client.tables.Table;
+import com.datastax.astra.client.tables.TableDefinition;
+import com.datastax.astra.client.tables.columns.ColumnDefinitionVector;
+import com.datastax.astra.client.tables.columns.ColumnTypes;
+import com.datastax.astra.client.tables.ddl.CreateTableOptions;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItem;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.CollectionItemIdGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ContainerType;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
+import com.datastax.stargate.perf.insertmany.entity.ItemTable;
 
 /**
  * Wrapper around access to test Collections for Data API
@@ -45,43 +51,6 @@ public class InsertManyClient
         this.batchSize = batchSize;
     }
 
-    private String containerDesc() {
-        return containerType.desc(containerName);
-    }
-
-    private boolean containerExists() {
-        return switch (containerType) {
-            case COLLECTION -> db.collectionExists(containerName);
-            case TABLE -> db.tableExists(containerName);
-        };
-    }
-
-    private ItemContainer fetchContainer() {
-        return switch (containerType) {
-            case COLLECTION -> new ItemCollection(containerName,
-                    db.getCollection(containerName),
-                    vectorSize, orderedInserts);
-            case TABLE -> /*
-                new ItemTable(containerName,
-                    db.getCollection(containerName),
-                    vectorSize, orderedInserts);
-                    */
-                    null;
-        };
-    }
-
-    private void dropContainer() {
-        switch (containerType) {
-            case COLLECTION:
-                db.dropCollection(containerName);
-                break;
-            case TABLE:
-            default:
-                db.dropTable(containerName);
-        }
-    }
-
-
     /**
      * Method that will (re)create Collection as necessary; clear (if not deleted).
      * Fails with exception if there are problems with collection access.
@@ -112,34 +81,112 @@ public class InsertManyClient
         }
 
         if (container == null) {
-            CollectionOptions.CollectionOptionsBuilder opts = CollectionOptions.builder();
-            String desc;
-            if (vectorSize > 0) {
-                opts = opts.vector(vectorSize, SimilarityMetric.COSINE);
-                desc = "vector: "+vectorSize+"/"+SimilarityMetric.COSINE;
-            } else {
-                desc = "vector: NONE";
-            }
-            if (addIndexes) {
-                desc += ", index: ALL";
-            } else {
-                desc += ", index: NONE";
-                opts = opts.indexingDeny("*");
-            }
-            System.out.printf("Will (re)create %s (%s): ",
-                    containerDesc(), desc);
-            final CollectionOptions collOpts = opts.build();
-
-            final long start = System.currentTimeMillis();
-            Collection<Document> coll = db.createCollection(containerName, collOpts);
-            System.out.printf("created (in %s)); options = %s\n",
-                    _secs(System.currentTimeMillis() - start),
-                    coll.getDefinition().getOptions());
-            container = new ItemCollection(containerName, coll, vectorSize, orderedInserts);
+            container = createContainer(addIndexes);
         }
         itemContainer = container;
-        // And let's verify Collection does exist; do by checking it's empty
+        // And let's verify Collection does exist; do by checking it is empty
         itemContainer.validateIsEmpty();
+    }
+
+    private String containerDesc() {
+        return containerType.desc(containerName);
+    }
+
+    private boolean containerExists() {
+        return switch (containerType) {
+            case COLLECTION -> db.collectionExists(containerName);
+            case TABLE -> db.tableExists(containerName);
+        };
+    }
+
+    private void dropContainer() {
+        switch (containerType) {
+            case COLLECTION:
+                db.dropCollection(containerName);
+                break;
+            case TABLE:
+            default:
+                db.dropTable(containerName);
+        }
+    }
+
+    private ItemContainer fetchContainer() {
+        return switch (containerType) {
+            case COLLECTION -> new ItemCollection(containerName,
+                    db.getCollection(containerName),
+                    vectorSize, orderedInserts);
+            case TABLE -> /*
+                new ItemTable(containerName,
+                    db.getCollection(containerName),
+                    vectorSize, orderedInserts);
+                    */
+                    null;
+        };
+    }
+
+    private ItemContainer createContainer(boolean addIndexes) {
+        return switch (containerType) {
+            case COLLECTION -> createCollection(addIndexes);
+            case TABLE -> createTable();
+        };
+    }
+
+    private ItemCollection createCollection(boolean addIndexes) {
+        CollectionOptions.CollectionOptionsBuilder opts = CollectionOptions.builder();
+        String desc;
+        if (vectorSize > 0) {
+            opts = opts.vector(vectorSize, SimilarityMetric.COSINE);
+            desc = "vector: "+vectorSize+"/"+SimilarityMetric.COSINE;
+        } else {
+            desc = "vector: NONE";
+        }
+        if (addIndexes) {
+            desc += ", index: ALL";
+        } else {
+            desc += ", index: NONE";
+            opts = opts.indexingDeny("*");
+        }
+        System.out.printf("Will (re)create %s (%s): ",
+                containerDesc(), desc);
+        final CollectionOptions collOpts = opts.build();
+
+        final long start = System.currentTimeMillis();
+        Collection<Document> coll = db.createCollection(containerName, collOpts);
+        System.out.printf("created (in %s)); options = %s\n",
+                _secs(System.currentTimeMillis() - start),
+                coll.getDefinition().getOptions());
+        return new ItemCollection(containerName, coll, vectorSize, orderedInserts);
+    }
+
+    private ItemTable createTable() {
+        CreateTableOptions options = new CreateTableOptions()
+                .ifNotExists(false);
+        TableDefinition tableDef = new TableDefinition();
+        tableDef = tableDef.addColumnText("id");
+        tableDef = tableDef.addColumnText("description");
+        tableDef = tableDef.addColumn("value", ColumnTypes.BIGINT);
+
+        String desc;
+        if (vectorSize > 0) {
+            tableDef = tableDef.addColumnVector("vector",
+                    new ColumnDefinitionVector().dimension(vectorSize)
+                            .metric(SimilarityMetric.COSINE));
+            desc = "vector: "+vectorSize+"/"+SimilarityMetric.COSINE;
+        } else {
+            desc = "vector: NONE";
+        }
+        tableDef = tableDef.withPartitionKey("id");
+
+        System.out.printf("Will (re)create %s (%s): ",
+                containerDesc(), desc);
+
+        final long start = System.currentTimeMillis();
+        Table<CollectionItem> table = db.createTable(containerName, tableDef,
+                options,
+                CollectionItem.class);
+        System.out.printf("created (in %s))\n",
+                _secs(System.currentTimeMillis() - start));
+        return new ItemTable(containerName, table, vectorSize, orderedInserts);
     }
 
     /**

@@ -13,11 +13,11 @@ public class CollectionItem
 {
     private final String idAsString;
 
-    private final long value;
+    public final long value;
 
-    private final String description;
+    public final String description;
 
-    private final float[] vector;
+    public final float[] vector;
 
     private CollectionItem(String idAsString,
                            long value, String description, float[] vector) {
