@@ -64,6 +64,26 @@ public class ContainerItem
         return doc;
     }
 
+    public static ContainerItem fromTableRow(Optional<Row> maybeRow) {
+        return maybeRow.isPresent() ? fromTableRow(maybeRow.get()) : null;
+    }
+
+    public static ContainerItem fromTableRow(Row row) {
+        String id = row.getText("id");
+        long value = row.getBigInt("value");
+        String description = row.getText("description");
+        // What'd be the most efficient way? I guess we'll get List<Float> by
+        // Java driver so...
+        float[] rawVector;
+        if (row.containsKey("vector")) {
+            DataAPIVector vector = new DataAPIVector(row.get("vector", float[].class));
+            rawVector = vector.getEmbeddings();
+        } else {
+            rawVector = null;
+        }
+        return new ContainerItem(id, value, description, rawVector);
+    }
+
     public Row toTableRow() {
         Row row = Row.create()
                 .addText("id", idAsString)

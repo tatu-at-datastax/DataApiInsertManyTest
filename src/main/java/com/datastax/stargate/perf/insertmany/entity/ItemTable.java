@@ -2,6 +2,8 @@ package com.datastax.stargate.perf.insertmany.entity;
 
 import com.datastax.astra.client.collections.documents.Document;
 import com.datastax.astra.client.collections.options.CollectionInsertManyOptions;
+import com.datastax.astra.client.core.query.Filter;
+import com.datastax.astra.client.core.query.FilterOperator;
 import com.datastax.astra.client.exception.DataAPIException;
 import com.datastax.astra.client.tables.Table;
 import com.datastax.astra.client.tables.options.TableInsertManyOptions;
@@ -10,6 +12,7 @@ import com.datastax.astra.client.tables.results.TableInsertOneResult;
 import com.datastax.astra.client.tables.row.Row;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Wrapper around an API Table.
@@ -83,11 +86,10 @@ public record ItemTable(String name, Table<Row> table,
 
     @Override
     public ContainerItem findItem(String idAsSring) {
-        /*
-        Optional<Document> doc = collection.findOne(Filter.findById(idAsSring));
-        return CollectionItem.fromDocument(doc);
-         */
-        return null;
+        // NOTE: don't use "findById" as that assumes "_id" key
+        Filter idFilter = new Filter("id", FilterOperator.EQUALS_TO, idAsSring);
+        Optional<Row> row = table.findOne(idFilter);
+        return ContainerItem.fromTableRow(row);
     }
 
     @Override
