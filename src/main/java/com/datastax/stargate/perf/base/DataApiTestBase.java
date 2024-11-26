@@ -148,8 +148,8 @@ public abstract class DataApiTestBase {
         System.out.print("Creating DataAPIClient...");
         DataAPIClientOptions.DataAPIClientOptionsBuilder optBuilder = DataAPIClientOptions.builder()
                 .withDestination(env.destination());
-        // Retry defaults would be 3/100 msec; change to 2/50 msec
-        optBuilder = optBuilder.withHttpRetries(2, Duration.ofMillis(50L));
+        // Retry defaults would be 3/100 msec; change to 3/50 msec
+        optBuilder = optBuilder.withHttpRetries(3, Duration.ofMillis(50L));
         DataAPIClient client = new DataAPIClient(token, dataApiOptions(optBuilder).build());
         System.out.println(" created.");
         return client;

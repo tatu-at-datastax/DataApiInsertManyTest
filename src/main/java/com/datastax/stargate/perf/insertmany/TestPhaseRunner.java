@@ -37,7 +37,7 @@ public class TestPhaseRunner {
        System.out.printf("runPhase('%s') for %d %s (vector: %d, %d agents, maxRPS: %d, ordered: %s)\n",
                phaseName, duration, durationUnit,
                items.vectorSize(), agentCount, maxRPS, items.orderedInserts());
-       System.out.printf(" first, truncate collection: ");
+       System.out.printf(" first, truncate container: ");
        items.deleteAll();
        System.out.printf("ok.\n");
        Thread.sleep(1000L);
