@@ -5,8 +5,6 @@ import java.util.Optional;
 
 import com.datastax.astra.client.collections.documents.Document;
 import com.datastax.astra.client.core.vector.DataAPIVector;
-import com.datastax.astra.client.tables.columns.ColumnTypes;
-import com.datastax.astra.client.tables.mapping.Column;
 import com.datastax.astra.client.tables.row.Row;
 
 /**
@@ -15,16 +13,12 @@ import com.datastax.astra.client.tables.row.Row;
  */
 public class ContainerItem
 {
-    @Column(value = "id", type = ColumnTypes.TEXT)
     public final String idAsString;
 
-    @Column(value = "value", type = ColumnTypes.BIGINT)
     public final long value;
 
-    @Column(value = "description", type = ColumnTypes.TEXT)
     public final String description;
 
-    @Column(value = "vector", type = ColumnTypes.VECTOR)
     public final float[] vector;
 
     private ContainerItem(String idAsString,
@@ -116,6 +110,6 @@ public class ContainerItem
                     "Unexpected 'description': expected %s, got %s",
                     exp.description, actual.description));
         }
-        // Leave out $vector, not populated when fetching
+        // Leave out $vector, not populated when fetching from Collection
     }
 }
