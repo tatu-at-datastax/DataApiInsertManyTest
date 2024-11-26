@@ -4,6 +4,9 @@ import com.datastax.astra.client.collections.documents.Document;
 import com.datastax.astra.client.collections.options.CollectionInsertManyOptions;
 import com.datastax.astra.client.exception.DataAPIException;
 import com.datastax.astra.client.tables.Table;
+import com.datastax.astra.client.tables.options.TableInsertManyOptions;
+import com.datastax.astra.client.tables.results.TableInsertManyResult;
+import com.datastax.astra.client.tables.results.TableInsertOneResult;
 
 import java.util.List;
 
@@ -37,14 +40,12 @@ public record ItemTable(String name, Table<ContainerItem> table,
 
     @Override
     public void insertItem(ContainerItem item) throws DataAPIException {
-        /*
-        CollectionInsertOneResult result = table.insertOne(item.toDocument());
+        TableInsertOneResult result = table.insertOne(item);
         if (!item.idAsString().equals(result.getInsertedId())) {
             throw new IllegalStateException(String.format(
                     "Unexpected id for inserted document: expected %s, got %s",
                     _str(item.idAsString()), _str(result.getInsertedId())));
         }
-         */
     }
 
     @Override
@@ -54,21 +55,18 @@ public record ItemTable(String name, Table<ContainerItem> table,
             insertItem(items.get(0));
             return true;
         }
-        List<Document> itemList = items.stream().map(ContainerItem::toDocument).toList();
-        CollectionInsertManyOptions options = new CollectionInsertManyOptions()
+        TableInsertManyOptions options = new TableInsertManyOptions()
                 .ordered(orderedInserts);
         if (items.size() > options.chunkSize()) {
             options = options.chunkSize(items.size());
         }
 
-        /*
-        CollectionInsertManyResult result = collection.insertMany(itemList, options);
+        TableInsertManyResult result = table.insertMany(items, options);
         List<?> ids = result.getInsertedIds();
         if (ids == null || ids.size() != items.size()) {
             return false;
         }
 
-         */
         return true;
     }
 

@@ -4,6 +4,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.datastax.astra.client.collections.documents.Document;
+import com.datastax.astra.client.tables.columns.ColumnTypes;
+import com.datastax.astra.client.tables.mapping.Column;
 
 /**
  * Lightweight wrapper for information needed to create a Document or Row to insert
@@ -11,12 +13,16 @@ import com.datastax.astra.client.collections.documents.Document;
  */
 public class ContainerItem
 {
-    private final String idAsString;
+    @Column(value = "id", type = ColumnTypes.TEXT)
+    public final String idAsString;
 
+    @Column(value = "value", type = ColumnTypes.BIGINT)
     public final long value;
 
+    @Column(value = "description", type = ColumnTypes.TEXT)
     public final String description;
 
+    @Column(value = "vector", type = ColumnTypes.VECTOR)
     public final float[] vector;
 
     private ContainerItem(String idAsString,

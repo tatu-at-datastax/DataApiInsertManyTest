@@ -5,19 +5,19 @@ import com.datastax.astra.client.exception.DataAPIException;
 import java.util.List;
 
 public interface ItemContainer {
-    public int vectorSize();
+    int vectorSize();
 
-    public boolean orderedInserts();
+    boolean orderedInserts();
 
-    public void validateIsEmpty();
+    void validateIsEmpty();
 
-    public long countItems(int maxCount);
+    long countItems(int maxCount);
 
-    public void insertItem(ContainerItem item) throws DataAPIException;
+    void insertItem(ContainerItem item) throws DataAPIException;
 
-    public boolean insertItems(List<ContainerItem> items) throws DataAPIException;
+    boolean insertItems(List<ContainerItem> items) throws DataAPIException;
 
-    public ContainerItem findItem(String idAsSring);
+    ContainerItem findItem(String idAsSring);
 
-    public long deleteAll();
+    long deleteAll();
 }
