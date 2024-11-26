@@ -38,7 +38,7 @@ public class InsertManyTableTest
             tableNames	= db.listTableNames();
             System.out.println(tableNames.toList());
         } catch (Exception e) {
-            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL/0: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
             return 3;
         }
@@ -50,8 +50,9 @@ public class InsertManyTableTest
         try {
             testClient.initialize(skipInit, true);
         } catch (Exception e) {
-            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL/1: (%s) %s\n", e.getClass().getName(),
                     e);
+            e.printStackTrace();
             return 3;
         }
         System.out.printf("Ok: Initialization of '%s' successful.\n", tableName);
@@ -59,7 +60,7 @@ public class InsertManyTableTest
         try {
             testClient.validate();
         } catch (Exception e) {
-            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL/2: (%s) %s\n", e.getClass().getName(),
                     e);
             return 4;
         }
@@ -69,7 +70,7 @@ public class InsertManyTableTest
         try {
             testClient.runWarmupAndTest(agentCount, rateLimitRPS);
         } catch (Exception e) {
-            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL/3: (%s) %s\n", e.getClass().getName(),
                     e);
             return 5;
         }

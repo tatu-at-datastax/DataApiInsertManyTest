@@ -42,10 +42,13 @@ public class InsertManyAgent
             }
             List<ContainerItem> batch = itemGenerator.generate(batchSize);
             final long startTime = System.currentTimeMillis();
-            Boolean ok = null;
             try {
-                ok = items.insertItems(batch);
+                boolean ok = items.insertItems(batch);
                 metrics.reportOkCall(this, System.currentTimeMillis() - startTime);
+                if (!ok) {
+                    System.err.printf("WARN: insertItems returned `false` for %s\n", this);
+
+                }
             } catch (DataAPIException ex) {
                 metrics.reportErrorCall(this, System.currentTimeMillis() - startTime);
                 System.err.printf("WARN: exception for %s: (%s) %s\n",

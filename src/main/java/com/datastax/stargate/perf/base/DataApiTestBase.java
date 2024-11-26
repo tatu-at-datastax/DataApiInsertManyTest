@@ -9,6 +9,7 @@ import com.datastax.astra.client.databases.Database;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
 
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -147,13 +148,13 @@ public abstract class DataApiTestBase {
         System.out.print("Creating DataAPIClient...");
         DataAPIClientOptions.DataAPIClientOptionsBuilder optBuilder = DataAPIClientOptions.builder()
                 .withDestination(env.destination());
+        // Retry defaults would be 3/100 msec; change to 2/50 msec
+        optBuilder = optBuilder.withHttpRetries(2, Duration.ofMillis(50L));
         DataAPIClient client = new DataAPIClient(token, dataApiOptions(optBuilder).build());
         System.out.println(" created.");
         return client;
     }
 
-    protected DataAPIClientOptions.DataAPIClientOptionsBuilder dataApiOptions(
-            DataAPIClientOptions.DataAPIClientOptionsBuilder builder) {
-        return builder;
-    }
+    protected abstract DataAPIClientOptions.DataAPIClientOptionsBuilder dataApiOptions(
+            DataAPIClientOptions.DataAPIClientOptionsBuilder builder);
 }
