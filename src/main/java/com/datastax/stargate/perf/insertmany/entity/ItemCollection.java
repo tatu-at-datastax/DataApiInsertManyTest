@@ -22,8 +22,7 @@ public record ItemCollection(String name, Collection<Document> collection,
 {
     @Override
     public void validateIsEmpty() {
-        final int maxCount = 100;
-        long count = countItems(maxCount);
+        long count = countItems(100);
         if (count > 0) {
             throw new IllegalStateException("Collection '" + name + "' not empty; has " + count + " documents");
         }

@@ -4,8 +4,11 @@ import com.datastax.astra.client.collections.documents.Document;
 import com.datastax.astra.client.collections.options.CollectionInsertManyOptions;
 import com.datastax.astra.client.core.query.Filter;
 import com.datastax.astra.client.core.query.FilterOperator;
+import com.datastax.astra.client.core.vector.SimilarityMetric;
 import com.datastax.astra.client.exception.DataAPIException;
 import com.datastax.astra.client.tables.Table;
+import com.datastax.astra.client.tables.index.VectorIndexDefinition;
+import com.datastax.astra.client.tables.index.VectorIndexDefinitionOptions;
 import com.datastax.astra.client.tables.options.TableInsertManyOptions;
 import com.datastax.astra.client.tables.results.TableInsertManyResult;
 import com.datastax.astra.client.tables.results.TableInsertOneResult;
@@ -23,22 +26,24 @@ public record ItemTable(String name, Table<Row> table,
 {
     @Override
     public void validateIsEmpty() {
-        final int maxCount = 100;
-        long count = countItems(maxCount);
-        if (count > 0) {
-            throw new IllegalStateException("Table '" + name + "' not empty; has " + count + " documents");
+        // If "countDocuments()" was supported, we would do:
+        if (false) {
+            long count = countItems(100);
+            if (count > 0) {
+                throw new IllegalStateException("Table '" + name + "' not empty; has " + count + " rows");
+            }
+        }
+        // ... but since not, try to fetch a single item
+        Optional<Row> row = table.findOne(new Filter());
+        if (row.isPresent()) {
+            throw new IllegalStateException("Table '" + name + "' not empty; has at least one row");
         }
     }
 
     @Override
     public long countItems(int maxCount) {
-        /*
-        try {
-            return table.countDocuments(maxCount);
-        } catch (TooManyDocumentsToCountException e) {
-            return maxCount+1;
-        }
-         */
+        // Not yet supported by Data API for Tables, so:
+        //return table.countRows(maxCount);
         return -1L;
     }
 
@@ -94,11 +99,15 @@ public record ItemTable(String name, Table<Row> table,
 
     @Override
     public long deleteAll() {
-        /*
-        CollectionDeleteResult dr = collection.deleteAll();
-        return dr.getDeletedCount();
-         */
+        table.deleteAll();
         return -1L;
+    }
+
+    public void createVectorIndex(String idxName, int dimension) {
+        table.createVectorIndex(idxName, new VectorIndexDefinition()
+                .column("vector")
+                .options(new VectorIndexDefinitionOptions()
+                        .metric(SimilarityMetric.COSINE)));
     }
 
     private static String _str(Object ob) {

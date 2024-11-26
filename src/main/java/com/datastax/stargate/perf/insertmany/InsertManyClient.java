@@ -168,7 +168,8 @@ public class InsertManyClient
         tableDef = tableDef.addColumn("value", ColumnTypes.BIGINT);
 
         String desc;
-        if (vectorSize > 0) {
+        boolean hasVector = vectorSize > 0;
+        if (hasVector) {
             tableDef = tableDef.addColumnVector("vector",
                     new ColumnDefinitionVector().dimension(vectorSize)
                             .metric(SimilarityMetric.COSINE));
@@ -181,12 +182,23 @@ public class InsertManyClient
         System.out.printf("Will (re)create %s (%s): ",
                 containerDesc(), desc);
 
-        final long start = System.currentTimeMillis();
-        Table<Row> table = db.createTable(containerName, tableDef,
+        long start = System.currentTimeMillis();
+        Table<Row> rawTable = db.createTable(containerName, tableDef,
                 options);
         System.out.printf("created (in %s))\n",
                 _secs(System.currentTimeMillis() - start));
-        return new ItemTable(containerName, table, vectorSize, orderedInserts);
+        ItemTable table = new ItemTable(containerName, rawTable, vectorSize, orderedInserts);
+        if (hasVector) {
+            final String indexName = "idx_vector_" + containerName;
+            start = System.currentTimeMillis();
+            System.out.printf("  will (re)create Vector index '%s': ", indexName);
+            table.createVectorIndex(indexName, vectorSize);
+            System.out.printf("created (in %s))\n",
+                    _secs(System.currentTimeMillis() - start));
+        } else {
+            System.out.println("  will NOT (re)create index for Vector:");
+        }
+        return table;
     }
 
     /**
@@ -237,10 +249,14 @@ public class InsertManyClient
         System.out.printf("  all inserted and verified: should now have %d documents, verify: ", expCount);
 
         final long actCount = itemContainer.countItems(expCount + 100);
-        if (expCount != actCount) {
-            throw new IllegalStateException("Expected to have "+expCount+" documents, had "+actCount);
+        if (expCount == actCount) {
+            System.out.println("OK (had expected number)");
+        // 25-Nov-2024, tatu: Tables do not support count yet, so let's just warn
+        } else if (actCount == -1) {
+            System.out.println("MAYBE-OK (Tables do not support count yet)");
+        } else {
+            throw new IllegalStateException("Expected to have " + expCount + " documents, had " + actCount);
         }
-        System.out.println("OK (had expected number)");
 
         // And all this being done, let's delete all items
         System.out.printf("  and now let's delete all items: ");
