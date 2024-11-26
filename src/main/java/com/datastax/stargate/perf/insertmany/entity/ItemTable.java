@@ -7,13 +7,14 @@ import com.datastax.astra.client.tables.Table;
 import com.datastax.astra.client.tables.options.TableInsertManyOptions;
 import com.datastax.astra.client.tables.results.TableInsertManyResult;
 import com.datastax.astra.client.tables.results.TableInsertOneResult;
+import com.datastax.astra.client.tables.row.Row;
 
 import java.util.List;
 
 /**
  * Wrapper around an API Table.
  */
-public record ItemTable(String name, Table<ContainerItem> table,
+public record ItemTable(String name, Table<Row> table,
                         int vectorSize, boolean orderedInserts)
     implements ItemContainer
 {
@@ -40,11 +41,18 @@ public record ItemTable(String name, Table<ContainerItem> table,
 
     @Override
     public void insertItem(ContainerItem item) throws DataAPIException {
-        TableInsertOneResult result = table.insertOne(item);
-        if (!item.idAsString().equals(result.getInsertedId())) {
+        TableInsertOneResult result = table.insertOne(item.toTableRow());
+        List<Object> primaryKeys = result.getInsertedId();
+        if (primaryKeys.size() != 1) {
+            throw new IllegalStateException(String.format(
+                    "Unexpected id response for inserted document: expected List<1>, got List<%d>",
+                    primaryKeys.size()));
+        }
+        Object resultId = primaryKeys.get(0);
+        if (!item.idAsString().equals(resultId)) {
             throw new IllegalStateException(String.format(
                     "Unexpected id for inserted document: expected %s, got %s",
-                    _str(item.idAsString()), _str(result.getInsertedId())));
+                    _str(item.idAsString()), _str(resultId)));
         }
     }
 
@@ -55,13 +63,16 @@ public record ItemTable(String name, Table<ContainerItem> table,
             insertItem(items.get(0));
             return true;
         }
+        List<Row> rows = items.stream()
+                .map(item -> item.toTableRow())
+                .toList();
         TableInsertManyOptions options = new TableInsertManyOptions()
                 .ordered(orderedInserts);
         if (items.size() > options.chunkSize()) {
             options = options.chunkSize(items.size());
         }
 
-        TableInsertManyResult result = table.insertMany(items, options);
+        TableInsertManyResult result = table.insertMany(rows, options);
         List<?> ids = result.getInsertedIds();
         if (ids == null || ids.size() != items.size()) {
             return false;

@@ -13,6 +13,7 @@ import com.datastax.astra.client.tables.TableDefinition;
 import com.datastax.astra.client.tables.columns.ColumnDefinitionVector;
 import com.datastax.astra.client.tables.columns.ColumnTypes;
 import com.datastax.astra.client.tables.ddl.CreateTableOptions;
+import com.datastax.astra.client.tables.row.Row;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItem;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemIdGenerator;
@@ -181,9 +182,8 @@ public class InsertManyClient
                 containerDesc(), desc);
 
         final long start = System.currentTimeMillis();
-        Table<ContainerItem> table = db.createTable(containerName, tableDef,
-                options,
-                ContainerItem.class);
+        Table<Row> table = db.createTable(containerName, tableDef,
+                options);
         System.out.printf("created (in %s))\n",
                 _secs(System.currentTimeMillis() - start));
         return new ItemTable(containerName, table, vectorSize, orderedInserts);

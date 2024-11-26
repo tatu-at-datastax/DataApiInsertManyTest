@@ -4,8 +4,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.datastax.astra.client.collections.documents.Document;
+import com.datastax.astra.client.core.vector.DataAPIVector;
 import com.datastax.astra.client.tables.columns.ColumnTypes;
 import com.datastax.astra.client.tables.mapping.Column;
+import com.datastax.astra.client.tables.row.Row;
 
 /**
  * Lightweight wrapper for information needed to create a Document or Row to insert
@@ -60,6 +62,18 @@ public class ContainerItem
         doc.put("value", value);
         doc.put("description", description);
         return doc;
+    }
+
+    public Row toTableRow() {
+        Row row = Row.create()
+                .addText("id", idAsString)
+                .addBigInt("value", value)
+                .addText("description", description);
+        if (vector != null) {
+            row = row.addVector("vector",
+                    new DataAPIVector(vector));
+        }
+        return row;
     }
 
     public String idAsString() {
