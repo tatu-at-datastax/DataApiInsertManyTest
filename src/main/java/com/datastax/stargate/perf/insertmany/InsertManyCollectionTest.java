@@ -90,6 +90,7 @@ public class InsertManyCollectionTest
     {
         // Should default to true anyway but just in case...
         DataAPIClientOptions.encodeDataApiVectorsAsBase64 = true;
+//        DataAPIClientOptions.encodeDataApiVectorsAsBase64 = false;
 
         int exitCode = new CommandLine(new InsertManyCollectionTest()).execute(args);
         System.exit(exitCode);

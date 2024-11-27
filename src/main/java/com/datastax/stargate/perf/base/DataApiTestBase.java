@@ -5,6 +5,7 @@ import com.datastax.astra.client.DataAPIDestination;
 import com.datastax.astra.client.admin.DatabaseAdmin;
 import com.datastax.astra.client.core.auth.UsernamePasswordTokenProvider;
 import com.datastax.astra.client.core.options.DataAPIClientOptions;
+import com.datastax.astra.client.core.options.TimeoutOptions;
 import com.datastax.astra.client.databases.Database;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
@@ -150,6 +151,10 @@ public abstract class DataApiTestBase {
                 .withDestination(env.destination());
         // Retry defaults would be 3/100 msec; change to 3/50 msec
         optBuilder = optBuilder.withHttpRetries(3, Duration.ofMillis(50L));
+        // Also timeout settings: increase slightly from defaults:
+        optBuilder = optBuilder.withTimeoutOptions(new TimeoutOptions()
+                        .connectTimeoutMillis(15_000L)
+                        .requestTimeoutMillis(20_000L));
         DataAPIClient client = new DataAPIClient(token, dataApiOptions(optBuilder).build());
         System.out.println(" created.");
         return client;

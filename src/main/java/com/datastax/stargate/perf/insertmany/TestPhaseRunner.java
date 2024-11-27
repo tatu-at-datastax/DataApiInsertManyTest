@@ -38,6 +38,8 @@ public class TestPhaseRunner {
                phaseName, duration, durationUnit,
                items.vectorSize(), agentCount, maxRPS, items.orderedInserts());
        System.out.printf(" first, truncate container: ");
+       // Let things settle a bit before, after truncation
+       Thread.sleep(1000L);
        items.deleteAll();
        System.out.printf("ok.\n");
        Thread.sleep(1000L);
