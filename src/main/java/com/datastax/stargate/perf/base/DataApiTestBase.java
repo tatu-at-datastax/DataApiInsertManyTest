@@ -114,12 +114,16 @@ public abstract class DataApiTestBase {
                     dbId, env.name());
 
             try {
-                if (ns == null || ns.isEmpty()) {
-                    db = client.getDatabase(dbId);
-                } else {
-                    db = client.getDatabase(dbId,
-                            new DatabaseOptions().keyspace(ns));
+                DatabaseOptions dbOpts = new DatabaseOptions()
+                        .token(astraToken)
+                        .dataAPIClientOptions(new DataAPIClientOptions()
+                                .destination(env.destination()));
+
+                if (ns != null && !ns.isEmpty()) {
+                    dbOpts = dbOpts.keyspace(ns);
                 }
+                db = client.getDatabase(dbId, dbOpts);
+
             } catch (DatabaseNotFoundException dbNfe) {
                 System.err.printf("\n  FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
                         dbNfe.getMessage());
