@@ -223,13 +223,15 @@ public class InsertManyClient
             System.out.println("(verified: OK)");
         }
 
+        // Let's use half the batch size
+        final int testBatchSize = batchSize / 2;
         System.out.printf("  will now insert %d batches of %d documents (ordered: %s):\n",
-                VALIDATE_BATCHES_TO_INSERT, batchSize,
+                VALIDATE_BATCHES_TO_INSERT, testBatchSize,
                 orderedInserts);
 
         for (int i = 0; i < VALIDATE_BATCHES_TO_INSERT; ++i) {
             final long start = System.currentTimeMillis();
-            List<ContainerItem> items = itemGen.generate(batchSize);
+            List<ContainerItem> items = itemGen.generate(testBatchSize);
             itemContainer.insertItems(items);
             System.out.printf("    inserted Batch #%d/%d (in %s)",
                     i+1, VALIDATE_BATCHES_TO_INSERT,
@@ -243,7 +245,8 @@ public class InsertManyClient
         }
 
         // Should now have certain number of Docs:
-        final int expCount = VALIDATE_SINGLE_ITEMS_TO_INSERT + (VALIDATE_BATCHES_TO_INSERT * batchSize);
+        final int expCount = VALIDATE_SINGLE_ITEMS_TO_INSERT
+                + (VALIDATE_BATCHES_TO_INSERT * testBatchSize);
 
         System.out.printf("  all inserted and verified: should now have %d documents, verify: ", expCount);
 

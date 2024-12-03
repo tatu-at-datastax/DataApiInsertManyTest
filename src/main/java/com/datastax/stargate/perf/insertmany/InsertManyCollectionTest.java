@@ -60,6 +60,7 @@ public class InsertManyCollectionTest
         } catch (Exception e) {
             System.err.printf("\n  FAIL/c3: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
+            e.printStackTrace();
             return 4;
         }
         System.out.printf("Ok: Validation of '%s' successful.\n", collectionName);
@@ -70,6 +71,7 @@ public class InsertManyCollectionTest
         } catch (Exception e) {
             System.err.printf("\n  FAIL/c4: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
+            e.printStackTrace();
             return 5;
         }
 
