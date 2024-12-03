@@ -125,7 +125,7 @@ public abstract class DataApiTestBase {
                 db = client.getDatabase(dbId, dbOpts);
 
             } catch (DatabaseNotFoundException dbNfe) {
-                System.err.printf("\n  FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
+                System.err.printf("\n  FAIL/b0: (%s) %s\n", dbNfe.getClass().getSimpleName(),
                         dbNfe.getMessage());
                 exitCode.set(3);
                 return null;

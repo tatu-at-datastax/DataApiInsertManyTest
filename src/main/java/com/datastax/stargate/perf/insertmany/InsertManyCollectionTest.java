@@ -38,7 +38,7 @@ public class InsertManyCollectionTest
             collectionNames	= db.listCollectionNames();
             System.out.println(collectionNames);
         } catch (Exception e) {
-            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL/c1: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
             return 3;
         }
@@ -49,7 +49,7 @@ public class InsertManyCollectionTest
         try {
             testClient.initialize(skipInit, addIndexes);
         } catch (Exception e) {
-            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL/c2: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
             return 3;
         }
@@ -58,7 +58,7 @@ public class InsertManyCollectionTest
         try {
             testClient.validate();
         } catch (Exception e) {
-            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL/c3: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
             return 4;
         }
@@ -68,7 +68,7 @@ public class InsertManyCollectionTest
         try {
             testClient.runWarmupAndTest(agentCount, rateLimitRPS);
         } catch (Exception e) {
-            System.err.printf("\n  FAIL: (%s) %s\n", e.getClass().getSimpleName(),
+            System.err.printf("\n  FAIL/c4: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
             return 5;
         }
