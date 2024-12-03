@@ -24,7 +24,8 @@ public abstract class DataApiTestBase {
         PROD(DataAPIDestination.ASTRA),
         DEV(DataAPIDestination.ASTRA_DEV),
         TEST(DataAPIDestination.ASTRA_TEST),
-        LOCAL(DataAPIDestination.DSE)
+        // Hmmmh. Should we allow DSE or CASSANDRA here?
+        LOCAL(DataAPIDestination.HCD)
         ;
 
         private final DataAPIDestination destination;
@@ -130,8 +131,10 @@ public abstract class DataApiTestBase {
             String token = new UsernamePasswordTokenProvider("cassandra", "cassandra").getToken();
             final DataAPIClient client = createClient(token);
             System.out.print("Connecting to LOCAL database...");
-            db = client.getDatabase("http://localhost:8181",
-                    new DatabaseOptions().keyspace("default_keyspace"));
+            db = client.getDatabase("http://localhost:8181");
+                new DatabaseOptions().keyspace("default_keyspace")
+                                .dataAPIClientOptions(new DataAPIClientOptions()
+                                        .destination(env.destination()));
             System.out.printf(" connected: keyspace '%s'\n", db.getKeyspace());
         }
 
