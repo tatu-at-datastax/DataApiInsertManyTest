@@ -3,9 +3,9 @@ package com.datastax.stargate.perf.insertmany.entity;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.datastax.astra.client.collections.documents.Document;
+import com.datastax.astra.client.collections.definition.documents.Document;
 import com.datastax.astra.client.core.vector.DataAPIVector;
-import com.datastax.astra.client.tables.row.Row;
+import com.datastax.astra.client.tables.definition.rows.Row;
 
 /**
  * Lightweight wrapper for information needed to create a Document or Row to insert

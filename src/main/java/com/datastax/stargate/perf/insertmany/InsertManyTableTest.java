@@ -2,26 +2,25 @@ package com.datastax.stargate.perf.insertmany;
 
 import com.datastax.astra.client.core.options.DataAPIClientOptions;
 import com.datastax.astra.client.databases.Database;
-import com.datastax.stargate.perf.base.DataApiCollectionTestBase;
 import com.datastax.stargate.perf.base.DataApiTableTestBase;
 import com.datastax.stargate.perf.insertmany.entity.ContainerType;
 import picocli.CommandLine;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 @CommandLine.Command(name = "InsertManyTableTest", mixinStandardHelpOptions=true)
 public class InsertManyTableTest
     extends DataApiTableTestBase
     implements Callable<Integer>
 {
-    protected int maxDocsToInsert;
+    // protected int maxDocsToInsert;
 
     @Override
     public Integer call()
     {
-        maxDocsToInsert = Math.max(batchSize, DataAPIClientOptions.DEFAULT_MAX_CHUNK_SIZE);
+        //maxDocsToInsert = Math.max(batchSize, DataAPIClientOptions.DEFAULT_MAX_CHUNK_SIZE);
 
         final AtomicInteger exitCode = new AtomicInteger(-1);
         Database db = initializeDB(exitCode);
@@ -32,11 +31,11 @@ public class InsertManyTableTest
 
 
         System.out.printf("Fetch names of existing Tables in the database: ");
-        Stream<String> tableNames;
+        List<String> tableNames;
 
         try {
             tableNames	= db.listTableNames();
-            System.out.println(tableNames.toList());
+            System.out.println(tableNames);
         } catch (Exception e) {
             System.err.printf("\n  FAIL/0: (%s) %s\n", e.getClass().getSimpleName(),
                     e);
@@ -81,16 +80,18 @@ public class InsertManyTableTest
     }
 
     @Override
-    protected DataAPIClientOptions.DataAPIClientOptionsBuilder dataApiOptions(
-            DataAPIClientOptions.DataAPIClientOptionsBuilder builder) {
-        return builder.withMaxDocumentsInInsert(maxDocsToInsert);
+    protected DataAPIClientOptions dataApiOptions(
+            DataAPIClientOptions opts) {
+        // 02-Dec-2024, tatu: Used to have this option, but no longer?
+        // opts.maxDocumentsInInsert(maxDocsToInsert);
+        return opts;
     }
 
     public static void main(String[] args)
     {
         // Should default to true anyway but just in case...
-        DataAPIClientOptions.encodeDataApiVectorsAsBase64 = true;
-//        DataAPIClientOptions.encodeDataApiVectorsAsBase64 = false;
+        // This looks weird tho.
+        DataAPIClientOptions.getSerdesOptions().encodeDataApiVectorsAsBase64(true);
 
         int exitCode = new CommandLine(new InsertManyTableTest()).execute(args);
         System.exit(exitCode);

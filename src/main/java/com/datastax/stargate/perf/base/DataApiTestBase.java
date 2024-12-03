@@ -4,9 +4,11 @@ import com.datastax.astra.client.DataAPIClient;
 import com.datastax.astra.client.DataAPIDestination;
 import com.datastax.astra.client.admin.DatabaseAdmin;
 import com.datastax.astra.client.core.auth.UsernamePasswordTokenProvider;
+import com.datastax.astra.client.core.http.HttpClientOptions;
 import com.datastax.astra.client.core.options.DataAPIClientOptions;
 import com.datastax.astra.client.core.options.TimeoutOptions;
 import com.datastax.astra.client.databases.Database;
+import com.datastax.astra.client.databases.DatabaseOptions;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
 
@@ -114,7 +116,8 @@ public abstract class DataApiTestBase {
                 if (ns == null || ns.isEmpty()) {
                     db = client.getDatabase(dbId);
                 } else {
-                    db = client.getDatabase(dbId, ns);
+                    db = client.getDatabase(dbId,
+                            new DatabaseOptions().keyspace(ns));
                 }
             } catch (DatabaseNotFoundException dbNfe) {
                 System.err.printf("\n  FAIL: (%s) %s\n", dbNfe.getClass().getSimpleName(),
@@ -122,23 +125,24 @@ public abstract class DataApiTestBase {
                 exitCode.set(3);
                 return null;
             }
-            System.out.printf(" connected: keyspace '%s'\n", db.getKeyspaceName());
+            System.out.printf(" connected: keyspace '%s'\n", db.getKeyspace());
         } else { // LOCAL env
             String token = new UsernamePasswordTokenProvider("cassandra", "cassandra").getToken();
             final DataAPIClient client = createClient(token);
             System.out.print("Connecting to LOCAL database...");
-            db = client.getDatabase("http://localhost:8181", "default_keyspace");
-            System.out.printf(" connected: keyspace '%s'\n", db.getKeyspaceName());
+            db = client.getDatabase("http://localhost:8181",
+                    new DatabaseOptions().keyspace("default_keyspace"));
+            System.out.printf(" connected: keyspace '%s'\n", db.getKeyspace());
         }
 
-        System.out.printf("Check existence of keyspace '%s'...", db.getKeyspaceName());
+        System.out.printf("Check existence of keyspace '%s'...", db.getKeyspace());
         DatabaseAdmin admin = db.getDatabaseAdmin();
         System.out.println(" (DatabaseAdmin created) ");
-        if (admin.keyspaceExists(db.getKeyspaceName())) {
+        if (admin.keyspaceExists(db.getKeyspace())) {
             System.out.println("keyspace exists.");
         } else {
             System.out.print("keyspace does not exist: will try create... ");
-            admin.createKeyspace(db.getKeyspaceName());
+            admin.createKeyspace(db.getKeyspace());
             System.out.println("Created!");
         }
 
@@ -147,19 +151,20 @@ public abstract class DataApiTestBase {
 
     protected  DataAPIClient createClient(String token) {
         System.out.print("Creating DataAPIClient...");
-        DataAPIClientOptions.DataAPIClientOptionsBuilder optBuilder = DataAPIClientOptions.builder()
-                .withDestination(env.destination());
+        DataAPIClientOptions opts = new DataAPIClientOptions()
+                .destination(env.destination());
         // Retry defaults would be 3/100 msec; change to 3/50 msec
-        optBuilder = optBuilder.withHttpRetries(3, Duration.ofMillis(50L));
+        opts = opts.httpClientOptions(new HttpClientOptions()
+                .httpRetries(3, Duration.ofMillis(50L)));
         // Also timeout settings: increase slightly from defaults:
-        optBuilder = optBuilder.withTimeoutOptions(new TimeoutOptions()
+        opts = opts.timeoutOptions(new TimeoutOptions()
                         .connectTimeoutMillis(15_000L)
                         .requestTimeoutMillis(20_000L));
-        DataAPIClient client = new DataAPIClient(token, dataApiOptions(optBuilder).build());
+        DataAPIClient client = new DataAPIClient(token, dataApiOptions(opts));
         System.out.println(" created.");
         return client;
     }
 
-    protected abstract DataAPIClientOptions.DataAPIClientOptionsBuilder dataApiOptions(
-            DataAPIClientOptions.DataAPIClientOptionsBuilder builder);
+    protected abstract DataAPIClientOptions dataApiOptions(
+            DataAPIClientOptions builder);
 }

@@ -1,6 +1,6 @@
 package com.datastax.stargate.perf.insertmany.entity;
 
-import com.datastax.astra.client.exception.DataAPIException;
+import com.datastax.astra.client.exceptions.DataAPIException;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package com.datastax.stargate.perf.insertmany.agent;
 
-import com.datastax.astra.client.exception.DataAPIException;
+import com.datastax.astra.client.exceptions.DataAPIException;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItem;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ItemContainer;

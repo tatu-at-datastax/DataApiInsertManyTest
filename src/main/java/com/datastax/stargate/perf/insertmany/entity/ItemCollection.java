@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Optional;
 
 import com.datastax.astra.client.collections.Collection;
-import com.datastax.astra.client.collections.documents.Document;
+import com.datastax.astra.client.collections.commands.options.CollectionInsertManyOptions;
+import com.datastax.astra.client.collections.commands.results.CollectionDeleteResult;
+import com.datastax.astra.client.collections.commands.results.CollectionInsertManyResult;
+import com.datastax.astra.client.collections.commands.results.CollectionInsertOneResult;
+import com.datastax.astra.client.collections.definition.documents.Document;
 import com.datastax.astra.client.collections.exceptions.TooManyDocumentsToCountException;
-import com.datastax.astra.client.collections.options.CollectionInsertManyOptions;
-import com.datastax.astra.client.collections.results.CollectionDeleteResult;
-import com.datastax.astra.client.collections.results.CollectionInsertManyResult;
-import com.datastax.astra.client.collections.results.CollectionInsertOneResult;
 import com.datastax.astra.client.core.query.Filter;
-import com.datastax.astra.client.exception.DataAPIException;
+import com.datastax.astra.client.exceptions.DataAPIException;
 
 /**
  * Wrapper around a Collection of Documents.
@@ -57,7 +57,7 @@ public record ItemCollection(String name, Collection<Document> collection,
         List<Document> itemList = items.stream().map(ContainerItem::toDocument).toList();
         CollectionInsertManyOptions options = new CollectionInsertManyOptions()
                 .ordered(orderedInserts);
-        if (items.size() > options.chunkSize()) {
+        if (items.size() > options.getChunkSize()) {
             options = options.chunkSize(items.size());
         }
 

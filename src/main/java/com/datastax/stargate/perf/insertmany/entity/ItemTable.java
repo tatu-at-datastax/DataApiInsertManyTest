@@ -1,18 +1,16 @@
 package com.datastax.stargate.perf.insertmany.entity;
 
-import com.datastax.astra.client.collections.documents.Document;
-import com.datastax.astra.client.collections.options.CollectionInsertManyOptions;
 import com.datastax.astra.client.core.query.Filter;
 import com.datastax.astra.client.core.query.FilterOperator;
 import com.datastax.astra.client.core.vector.SimilarityMetric;
-import com.datastax.astra.client.exception.DataAPIException;
+import com.datastax.astra.client.exceptions.DataAPIException;
 import com.datastax.astra.client.tables.Table;
-import com.datastax.astra.client.tables.index.VectorIndexDefinition;
-import com.datastax.astra.client.tables.index.VectorIndexDefinitionOptions;
-import com.datastax.astra.client.tables.options.TableInsertManyOptions;
-import com.datastax.astra.client.tables.results.TableInsertManyResult;
-import com.datastax.astra.client.tables.results.TableInsertOneResult;
-import com.datastax.astra.client.tables.row.Row;
+import com.datastax.astra.client.tables.commands.options.TableInsertManyOptions;
+import com.datastax.astra.client.tables.commands.results.TableInsertManyResult;
+import com.datastax.astra.client.tables.commands.results.TableInsertOneResult;
+import com.datastax.astra.client.tables.definition.indexes.TableVectorIndexDefinition;
+import com.datastax.astra.client.tables.definition.indexes.TableVectorIndexDefinitionOptions;
+import com.datastax.astra.client.tables.definition.rows.Row;
 
 import java.util.List;
 import java.util.Optional;
@@ -104,10 +102,11 @@ public record ItemTable(String name, Table<Row> table,
     }
 
     public void createVectorIndex(String idxName, int dimension) {
-        table.createVectorIndex(idxName, new VectorIndexDefinition()
+        TableVectorIndexDefinitionOptions options = new TableVectorIndexDefinitionOptions()
+                .metric(SimilarityMetric.COSINE);
+        table.createVectorIndex(idxName, new TableVectorIndexDefinition()
                 .column("vector")
-                .options(new VectorIndexDefinitionOptions()
-                        .metric(SimilarityMetric.COSINE)));
+                .options(options));
     }
 
     private static String _str(Object ob) {

@@ -4,16 +4,18 @@ import java.util.List;
 import java.util.Objects;
 
 import com.datastax.astra.client.collections.Collection;
+import com.datastax.astra.client.collections.commands.options.CreateCollectionOptions;
+import com.datastax.astra.client.collections.definition.CollectionDefinition;
+import com.datastax.astra.client.collections.definition.documents.Document;
 import com.datastax.astra.client.databases.Database;
 import com.datastax.astra.client.collections.CollectionOptions;
-import com.datastax.astra.client.collections.documents.Document;
 import com.datastax.astra.client.core.vector.SimilarityMetric;
 import com.datastax.astra.client.tables.Table;
-import com.datastax.astra.client.tables.TableDefinition;
-import com.datastax.astra.client.tables.columns.ColumnDefinitionVector;
-import com.datastax.astra.client.tables.columns.ColumnTypes;
-import com.datastax.astra.client.tables.ddl.CreateTableOptions;
-import com.datastax.astra.client.tables.row.Row;
+import com.datastax.astra.client.tables.commands.options.CreateTableOptions;
+import com.datastax.astra.client.tables.definition.TableDefinition;
+import com.datastax.astra.client.tables.definition.columns.ColumnDefinitionVector;
+import com.datastax.astra.client.tables.definition.columns.ColumnTypes;
+import com.datastax.astra.client.tables.definition.rows.Row;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItem;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemIdGenerator;
@@ -133,10 +135,10 @@ public class InsertManyClient
     }
 
     private ItemCollection createCollection(boolean addIndexes) {
-        CollectionOptions.CollectionOptionsBuilder opts = CollectionOptions.builder();
+        CollectionDefinition def = new CollectionDefinition();
         String desc;
         if (vectorSize > 0) {
-            opts = opts.vector(vectorSize, SimilarityMetric.COSINE);
+            def = def.vector(vectorSize, SimilarityMetric.COSINE);
             desc = "vector: "+vectorSize+"/"+SimilarityMetric.COSINE;
         } else {
             desc = "vector: NONE";
@@ -144,18 +146,17 @@ public class InsertManyClient
         if (addIndexes) {
             desc += ", index: ALL";
         } else {
+            def = def.indexingDeny("*");
             desc += ", index: NONE";
-            opts = opts.indexingDeny("*");
         }
         System.out.printf("Will (re)create %s (%s): ",
                 containerDesc(), desc);
-        final CollectionOptions collOpts = opts.build();
 
         final long start = System.currentTimeMillis();
-        Collection<Document> coll = db.createCollection(containerName, collOpts);
-        System.out.printf("created (in %s)); options = %s\n",
+        Collection<Document> coll = db.createCollection(containerName, def);
+        System.out.printf("created (in %s)); definition = %s\n",
                 _secs(System.currentTimeMillis() - start),
-                coll.getDefinition().getOptions());
+                def);
         return new ItemCollection(containerName, coll, vectorSize, orderedInserts);
     }
 
@@ -177,7 +178,7 @@ public class InsertManyClient
         } else {
             desc = "vector: NONE";
         }
-        tableDef = tableDef.withPartitionKey("id");
+        tableDef = tableDef.partitionKey("id");
 
         System.out.printf("Will (re)create %s (%s): ",
                 containerDesc(), desc);
