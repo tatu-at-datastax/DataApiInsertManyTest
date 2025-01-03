@@ -15,6 +15,6 @@ fi
 shift 1
 
 echo "Profiling process $pid for 30 seconds..."
-~/bin/asprof -i 100000 -d 30 -j 16  $* $pid
+~/bin/asprof -i 100000 -d 30 -j 20  $* $pid
 
 # --alloc 64k

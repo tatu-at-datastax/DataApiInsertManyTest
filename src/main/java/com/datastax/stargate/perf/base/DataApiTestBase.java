@@ -60,7 +60,7 @@ public abstract class DataApiTestBase {
     protected String ns = "default_keyspace";
 
     @CommandLine.Option(names = "--skip-init", arity="0",
-            description = "Skip initialization (use existing collection)")
+            description = "Skip initialization (use existing container)")
     protected boolean skipInit = false;
 
     // // // Operational settings (concurrency, rate limiting, batch size)
