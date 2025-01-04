@@ -15,6 +15,7 @@
     <javac.src.version>17</javac.src.version>
     <javac.target.version>17</javac.target.version>
 
+    <version.java-cql-driver>4.18.1</version.java-cql-driver>
     <version.logback>1.5.3</version.logback>
   </properties>
   <dependencies>
@@ -32,6 +33,19 @@
       <artifactId>astra-db-java</artifactId>
       <version>2.0.0-PREVIEW1-SNAPSHOT</version>
     </dependency>
+
+    <!-- Java CQL driver for direct CQL access, query builder for queries -->
+    <dependency>
+      <groupId>org.apache.cassandra</groupId>
+      <artifactId>java-driver-core</artifactId>
+      <version>${version.java-cql-driver}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.cassandra</groupId>
+      <artifactId>java-driver-query-builder</artifactId>
+      <version>${version.java-cql-driver}</version>
+    </dependency>
+
     <!-- Bucket4j for rate-limiting -->
     <dependency>
       <groupId>com.bucket4j</groupId>
