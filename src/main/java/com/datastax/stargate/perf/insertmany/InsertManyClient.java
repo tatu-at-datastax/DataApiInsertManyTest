@@ -116,12 +116,10 @@ public class InsertManyClient
             case COLLECTION -> new ItemCollection(containerName,
                     db.getCollection(containerName),
                     vectorSize, orderedInserts);
-            case TABLE -> /*
+            case TABLE ->
                 new ItemTable(containerName,
-                    db.getCollection(containerName),
+                    db.getTable(containerName),
                     vectorSize, orderedInserts);
-                    */
-                    null;
         };
     }
 
