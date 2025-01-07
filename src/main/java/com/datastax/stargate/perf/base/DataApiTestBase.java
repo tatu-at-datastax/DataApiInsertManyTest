@@ -9,7 +9,6 @@ import com.datastax.astra.client.core.options.DataAPIClientOptions;
 import com.datastax.astra.client.core.options.TimeoutOptions;
 import com.datastax.astra.client.databases.Database;
 import com.datastax.astra.client.databases.DatabaseOptions;
-import com.datastax.stargate.perf.insertmany.InsertManyTestClient;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
 
@@ -120,7 +119,8 @@ public abstract class DataApiTestBase
         try {
             containerNames = switch (containerType) {
                 case COLLECTION -> db.listCollectionNames();
-                case TABLE -> db.listTableNames();
+                // We use Data API access for both API Table and CQL Table for now
+                case API_TABLE, CQL_TABLE -> db.listTableNames();
             };
             System.out.println(containerNames);
         } catch (Exception e) {

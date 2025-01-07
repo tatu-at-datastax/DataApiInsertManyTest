@@ -12,12 +12,15 @@ import com.datastax.astra.client.tables.commands.options.CreateTableOptions;
 import com.datastax.astra.client.tables.definition.TableDefinition;
 import com.datastax.astra.client.tables.definition.columns.ColumnDefinitionVector;
 import com.datastax.astra.client.tables.definition.columns.ColumnTypes;
+import com.datastax.astra.client.tables.definition.indexes.TableVectorIndexDefinition;
+import com.datastax.astra.client.tables.definition.indexes.TableVectorIndexDefinitionOptions;
 import com.datastax.astra.client.tables.definition.rows.Row;
 import com.datastax.stargate.perf.base.DataApiTestClient;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItem;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemIdGenerator;
 import com.datastax.stargate.perf.base.ContainerType;
+import com.datastax.stargate.perf.insertmany.entity.ItemCQLTable;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
 import com.datastax.stargate.perf.insertmany.entity.ItemAPITable;
@@ -89,17 +92,22 @@ public class InsertManyTestClient
             case COLLECTION -> new ItemCollection(containerName,
                     db.getCollection(containerName),
                     vectorSize, orderedInserts);
-            case TABLE ->
+            case API_TABLE ->
                 new ItemAPITable(containerName,
                     db.getTable(containerName),
                     vectorSize, orderedInserts);
+            case CQL_TABLE ->
+                new ItemCQLTable(containerName,
+                        db.getTable(containerName),
+                        vectorSize, orderedInserts);
         };
     }
 
     private ItemContainer createContainer(boolean addIndexes) {
         return switch (containerType) {
             case COLLECTION -> createCollection(addIndexes);
-            case TABLE -> createTable();
+            case API_TABLE -> createAPITable();
+            case CQL_TABLE -> createCQLTable();
         };
     }
 
@@ -129,7 +137,17 @@ public class InsertManyTestClient
         return new ItemCollection(containerName, coll, vectorSize, orderedInserts);
     }
 
-    private ItemAPITable createTable() {
+    private ItemAPITable createAPITable() {
+        Table<Row> table = createRawTable();
+        return new ItemAPITable(containerName, table, vectorSize, orderedInserts);
+    }
+
+    private ItemCQLTable createCQLTable() {
+        Table<Row> table = createRawTable();
+        return new ItemCQLTable(containerName, table, vectorSize, orderedInserts);
+    }
+
+    private Table<Row> createRawTable() {
         CreateTableOptions options = new CreateTableOptions()
                 .ifNotExists(false);
         TableDefinition tableDef = new TableDefinition();
@@ -157,18 +175,25 @@ public class InsertManyTestClient
                 options);
         System.out.printf("created (in %s))\n",
                 _secs(System.currentTimeMillis() - start));
-        ItemAPITable table = new ItemAPITable(containerName, rawTable, vectorSize, orderedInserts);
         if (hasVector) {
             final String indexName = "idx_vector_" + containerName;
             start = System.currentTimeMillis();
             System.out.printf("  will (re)create Vector index '%s': ", indexName);
-            table.createVectorIndex(indexName, vectorSize);
+            createVectorIndexForTable(rawTable, indexName);
             System.out.printf("created (in %s))\n",
                     _secs(System.currentTimeMillis() - start));
         } else {
-            System.out.println("  will NOT (re)create index for Vector:");
+            System.out.println("  no Vector so will NOT (re)create index for Vector");
         }
-        return table;
+        return rawTable;
+    }
+
+    private void createVectorIndexForTable(Table<Row> rawTable, String idxName) {
+        TableVectorIndexDefinitionOptions options = new TableVectorIndexDefinitionOptions()
+                .metric(SimilarityMetric.COSINE);
+        rawTable.createVectorIndex(idxName, new TableVectorIndexDefinition()
+                .column("vector")
+                .options(options));
     }
 
     /**

@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Wrapper around an API Table (C* Table accessed via API Table API).
+ * Wrapper around an "Raw" CQL Table (C* Table accessed using CQL Driver).
  */
-public record ItemAPITable(String name, Table<Row> table,
+public record ItemCQLTable(String name, Table<Row> table,
                            int vectorSize, boolean orderedInserts)
     implements ItemContainer
 {
@@ -40,7 +40,7 @@ public record ItemAPITable(String name, Table<Row> table,
 
     @Override
     public long countItems(int maxCount) {
-        // Not yet supported by Data API for Tables, so:
+        // Not efficiently implemented/-able via CQL for big tables so
         //return table.countRows(maxCount);
         return -1L;
     }
@@ -89,10 +89,7 @@ public record ItemAPITable(String name, Table<Row> table,
 
     @Override
     public ContainerItem findItem(String idAsSring) {
-        // NOTE: don't use "findById" as that assumes "_id" key
-        Filter idFilter = new Filter("id", FilterOperator.EQUALS_TO, idAsSring);
-        Optional<Row> row = table.findOne(idFilter);
-        return ContainerItem.fromTableRow(row);
+        throw new UnsupportedOperationException("Not yet implemented!");
     }
 
     @Override
@@ -101,7 +98,7 @@ public record ItemAPITable(String name, Table<Row> table,
         return -1L;
     }
 
-    private void createVectorIndex(String idxName) {
+    public void createVectorIndex(String idxName) {
         TableVectorIndexDefinitionOptions options = new TableVectorIndexDefinitionOptions()
                 .metric(SimilarityMetric.COSINE);
         table.createVectorIndex(idxName, new TableVectorIndexDefinition()

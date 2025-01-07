@@ -9,7 +9,7 @@ public abstract class DataApiCQLTestBase extends DataApiTestBase {
     protected String tableName;
 
     protected DataApiCQLTestBase() {
-        super(ContainerType.TABLE);
+        super(ContainerType.API_TABLE);
     }
 
     @Override

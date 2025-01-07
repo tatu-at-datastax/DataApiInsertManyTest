@@ -10,7 +10,7 @@ public abstract class DataApiTableTestBase extends DataApiTestBase
     protected String tableName;
 
     protected DataApiTableTestBase() {
-        super(ContainerType.TABLE);
+        super(ContainerType.API_TABLE);
     }
 
     @Override

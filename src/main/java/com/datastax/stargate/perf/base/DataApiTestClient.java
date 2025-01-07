@@ -42,7 +42,8 @@ public abstract class DataApiTestClient {
     protected boolean containerExists() {
         return switch (containerType) {
             case COLLECTION -> db.collectionExists(containerName);
-            case TABLE -> db.tableExists(containerName);
+            // We use Data API access for both API Table and CQL Table for now
+            case API_TABLE, CQL_TABLE -> db.tableExists(containerName);
         };
     }
 
@@ -51,8 +52,9 @@ public abstract class DataApiTestClient {
             case COLLECTION:
                 db.dropCollection(containerName);
                 break;
-            case TABLE:
-            default:
+            // We use Data API access for both API Table and CQL Table for now
+            case API_TABLE:
+            case CQL_TABLE:
                 db.dropTable(containerName);
         }
     }
