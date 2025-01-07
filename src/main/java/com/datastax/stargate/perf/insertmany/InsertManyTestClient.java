@@ -20,7 +20,7 @@ import com.datastax.stargate.perf.insertmany.entity.ContainerItemIdGenerator;
 import com.datastax.stargate.perf.base.ContainerType;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
-import com.datastax.stargate.perf.insertmany.entity.ItemTable;
+import com.datastax.stargate.perf.insertmany.entity.ItemAPITable;
 
 /**
  * Wrapper around access to test Collections for Data API
@@ -90,7 +90,7 @@ public class InsertManyTestClient
                     db.getCollection(containerName),
                     vectorSize, orderedInserts);
             case TABLE ->
-                new ItemTable(containerName,
+                new ItemAPITable(containerName,
                     db.getTable(containerName),
                     vectorSize, orderedInserts);
         };
@@ -129,7 +129,7 @@ public class InsertManyTestClient
         return new ItemCollection(containerName, coll, vectorSize, orderedInserts);
     }
 
-    private ItemTable createTable() {
+    private ItemAPITable createTable() {
         CreateTableOptions options = new CreateTableOptions()
                 .ifNotExists(false);
         TableDefinition tableDef = new TableDefinition();
@@ -157,7 +157,7 @@ public class InsertManyTestClient
                 options);
         System.out.printf("created (in %s))\n",
                 _secs(System.currentTimeMillis() - start));
-        ItemTable table = new ItemTable(containerName, rawTable, vectorSize, orderedInserts);
+        ItemAPITable table = new ItemAPITable(containerName, rawTable, vectorSize, orderedInserts);
         if (hasVector) {
             final String indexName = "idx_vector_" + containerName;
             start = System.currentTimeMillis();

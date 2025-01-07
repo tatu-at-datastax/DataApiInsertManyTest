@@ -16,10 +16,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Wrapper around an API Table.
+ * Wrapper around an API Table (C* Table accessed via API Table API).
  */
-public record ItemTable(String name, Table<Row> table,
-                        int vectorSize, boolean orderedInserts)
+public record ItemAPITable(String name, Table<Row> table,
+                           int vectorSize, boolean orderedInserts)
     implements ItemContainer
 {
     @Override
