@@ -1,4 +1,4 @@
-package com.datastax.stargate.perf.insertmany.entity;
+package com.datastax.stargate.perf.base;
 
 public enum ContainerType {
     COLLECTION("Collection"),

@@ -1,7 +1,6 @@
 package com.datastax.stargate.perf.insertmany;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.datastax.astra.client.collections.Collection;
 import com.datastax.astra.client.collections.definition.CollectionDefinition;
@@ -14,10 +13,11 @@ import com.datastax.astra.client.tables.definition.TableDefinition;
 import com.datastax.astra.client.tables.definition.columns.ColumnDefinitionVector;
 import com.datastax.astra.client.tables.definition.columns.ColumnTypes;
 import com.datastax.astra.client.tables.definition.rows.Row;
+import com.datastax.stargate.perf.base.DataApiTestClient;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItem;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemGenerator;
 import com.datastax.stargate.perf.insertmany.entity.ContainerItemIdGenerator;
-import com.datastax.stargate.perf.insertmany.entity.ContainerType;
+import com.datastax.stargate.perf.base.ContainerType;
 import com.datastax.stargate.perf.insertmany.entity.ItemCollection;
 import com.datastax.stargate.perf.insertmany.entity.ItemContainer;
 import com.datastax.stargate.perf.insertmany.entity.ItemTable;
@@ -25,28 +25,24 @@ import com.datastax.stargate.perf.insertmany.entity.ItemTable;
 /**
  * Wrapper around access to test Collections for Data API
  */
-public class InsertManyClient
+public class InsertManyTestClient
+    extends DataApiTestClient
 {
     final private static int VALIDATE_SINGLE_ITEMS_TO_INSERT = 8;
 
     final private static int VALIDATE_BATCHES_TO_INSERT = 5;
 
-    private final Database db;
-    private final ContainerType containerType;
-    private final String containerName;
     private final int vectorSize;
     private final boolean orderedInserts;
     private final int batchSize;
 
     private ItemContainer itemContainer;
 
-    public InsertManyClient(Database db, ContainerType containerType,
-                            String containerName,
-                            int vectorSize, boolean orderedInserts,
-                            int batchSize) {
-        this.db = db;
-        this.containerType = Objects.requireNonNull(containerType);
-        this.containerName = Objects.requireNonNull(containerName);
+    public InsertManyTestClient(Database db, ContainerType containerType,
+                                String containerName,
+                                int vectorSize, boolean orderedInserts,
+                                int batchSize) {
+        super(db, containerType, containerName);
         this.vectorSize = vectorSize;
         this.orderedInserts = orderedInserts;
         this.batchSize = batchSize;
@@ -56,14 +52,15 @@ public class InsertManyClient
      * Method that will (re)create Collection as necessary; clear (if not deleted).
      * Fails with exception if there are problems with collection access.
      */
-    public void initialize(boolean skipCollectionRecreate,
+    @Override
+    public void initialize(boolean skipContainerRecreate,
                            boolean addIndexes) throws Exception
     {
         System.out.printf("  checking if %s exists: ", containerDesc());
         ItemContainer container = null;
 
         if (containerExists()) {
-            if (skipCollectionRecreate) {
+            if (skipContainerRecreate) {
                 System.out.println("it does -- and since '--skipInit' specified, will skip recreation");
                 System.out.printf("  but need to truncate its contents, if any...");
                 container = fetchContainer();
@@ -87,28 +84,6 @@ public class InsertManyClient
         itemContainer = container;
         // And let's verify Collection does exist; do by checking it is empty
         itemContainer.validateIsEmpty();
-    }
-
-    private String containerDesc() {
-        return containerType.desc(containerName);
-    }
-
-    private boolean containerExists() {
-        return switch (containerType) {
-            case COLLECTION -> db.collectionExists(containerName);
-            case TABLE -> db.tableExists(containerName);
-        };
-    }
-
-    private void dropContainer() {
-        switch (containerType) {
-            case COLLECTION:
-                db.dropCollection(containerName);
-                break;
-            case TABLE:
-            default:
-                db.dropTable(containerName);
-        }
     }
 
     private ItemContainer fetchContainer() {
@@ -203,6 +178,7 @@ public class InsertManyClient
      * first individually, then in bulk; verifying each insertion and finally deleting
      * all Items before returning.
      */
+    @Override
     public void validate() {
         ContainerItemIdGenerator idGenerator = ContainerItemIdGenerator.decreasingCycleGenerator(0);
         ContainerItemGenerator itemGen = new ContainerItemGenerator(idGenerator, vectorSize);
@@ -267,7 +243,7 @@ public class InsertManyClient
     }
 
     public void runWarmupAndTest(int threadCount, int testMaxRPS)
-        throws InterruptedException
+        throws Exception
     {
         final ContainerItemGenerator itemGenerator = new ContainerItemGenerator(
                 ContainerItemIdGenerator.increasingCycleGenerator(0),

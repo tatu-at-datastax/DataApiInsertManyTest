@@ -8,4 +8,13 @@ public abstract class DataApiTableTestBase extends DataApiTestBase
             defaultValue = "insert_many_test_api_table",
             description = "Table name (default: 'insert_many_test_api_table')")
     protected String tableName;
+
+    protected DataApiTableTestBase() {
+        super(ContainerType.TABLE);
+    }
+
+    @Override
+    protected String containerName() {
+        return tableName;
+    }
 }

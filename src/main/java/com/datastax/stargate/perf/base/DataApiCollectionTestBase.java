@@ -12,4 +12,13 @@ public abstract class DataApiCollectionTestBase extends DataApiTestBase
     @CommandLine.Option(names = {"-x", "--index", "--add-indexes"}, arity="1",
             description = "Whether to Index (all) Fields or not (default: true)")
     protected boolean addIndexes = true;
+
+    protected DataApiCollectionTestBase() {
+        super(ContainerType.COLLECTION);
+    }
+
+    @Override
+    protected String containerName() {
+        return collectionName;
+    }
 }

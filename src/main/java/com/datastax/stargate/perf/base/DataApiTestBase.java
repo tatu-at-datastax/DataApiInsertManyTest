@@ -9,17 +9,22 @@ import com.datastax.astra.client.core.options.DataAPIClientOptions;
 import com.datastax.astra.client.core.options.TimeoutOptions;
 import com.datastax.astra.client.databases.Database;
 import com.datastax.astra.client.databases.DatabaseOptions;
+import com.datastax.stargate.perf.insertmany.InsertManyTestClient;
 import com.dtsx.astra.sdk.db.exception.DatabaseNotFoundException;
 import picocli.CommandLine;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Base class for various tests
  */
-public abstract class DataApiTestBase {
+public abstract class DataApiTestBase
+    implements Callable<Integer>
+{
     enum DataApiEnv {
         PROD(DataAPIDestination.ASTRA),
         DEV(DataAPIDestination.ASTRA_DEV),
@@ -39,7 +44,11 @@ public abstract class DataApiTestBase {
         }
     }
 
-    final static String TOKEN_PREFIX = "AstraCS:";
+    private final static String TOKEN_PREFIX = "AstraCS:";
+
+    // // // Immutable configuration (not from command line)
+
+    protected final ContainerType containerType;
 
     // // // Connection settings, initialization
 
@@ -87,6 +96,92 @@ public abstract class DataApiTestBase {
     @CommandLine.Option(names = {"-v", "--vector-length"},
             description = "Vector size; 0 to disable (default: 1500)")
     protected int vectorLength = 1500;
+
+    protected DataApiTestBase(ContainerType containerType) {
+        this.containerType = containerType;
+    }
+
+    // Skeletal implementation of the call() method suitable for different test types
+    // (insertMany etc) and backends (collection, API table, CQL table)
+    @Override
+    public final Integer call()
+    {
+        final AtomicInteger exitCodeWrapper = new AtomicInteger(-1);
+        Database db = initializeDB(exitCodeWrapper);
+
+        if (db == null) {
+            return exitCodeWrapper.get();
+        }
+
+        // Check out existing Collections/Tables:
+        System.out.printf("Fetch names of existing %ss in the database: ", containerType.toString());
+        List<String> containerNames;
+
+        try {
+            containerNames = switch (containerType) {
+                case COLLECTION -> db.listCollectionNames();
+                case TABLE -> db.listTableNames();
+            };
+            System.out.println(containerNames);
+        } catch (Exception e) {
+            System.err.printf("\n  FAIL/base1: (%s) %s\n", e.getClass().getSimpleName(),
+                    e);
+            return 1;
+        }
+
+        // Create the test client
+        DataApiTestClient testClient;
+        try {
+            testClient = createTestClient(db);
+        } catch (Exception e) {
+            System.err.printf("\n  FAIL/base2: (%s) %s\n", e.getClass().getSimpleName(),
+                    e);
+            return 2;
+        }
+
+        // Initialize...
+        System.out.printf("Initialize test client (%s):\n", containerDesc());
+        try {
+            testClient.initialize(skipInit, true);
+        } catch (Exception e) {
+            System.err.printf("\n  FAIL/base3: (%s) %s\n", e.getClass().getName(),
+                    e);
+            return 3;
+        }
+        System.out.printf("Ok: Initialization of %s successful.\n", containerDesc());
+
+        // Validate functioning of test operations
+        System.out.printf("Validate that test operations on %s work.\n", containerDesc());
+        try {
+            testClient.validate();
+        } catch (Exception e) {
+            System.err.printf("\n  FAIL/base4: (%s) %s\n", e.getClass().getSimpleName(),
+                    e);
+            return 4;
+        }
+        System.out.printf("Ok: Validation of %s successful.\n", containerDesc());
+
+        // And then warm-up, run test
+        System.out.printf("Start warm-up, run test against %s.\n", containerDesc());
+        try {
+            testClient.runWarmupAndTest(agentCount, rateLimitRPS);
+        } catch (Exception e) {
+            System.err.printf("\n  FAIL/base5: (%s) %s\n", e.getClass().getName(),
+                    e);
+            return 5;
+        }
+
+        System.out.println();
+        System.out.println("DONE!");
+        return 0;
+    }
+
+    protected abstract String containerName();
+    protected String containerDesc() {
+        return containerType.desc(containerName());
+    }
+
+    protected abstract DataApiTestClient createTestClient(Database db) throws Exception;
 
     protected Database initializeDB(AtomicInteger exitCode)
     {
