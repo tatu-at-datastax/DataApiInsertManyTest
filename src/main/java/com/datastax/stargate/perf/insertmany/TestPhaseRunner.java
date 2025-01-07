@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class TestPhaseRunner {
    private final int agentCount;
+   private final int vectorSize;
    private final ItemContainer items;
    private final ContainerItemGenerator itemGenerator;
    private final int batchSize;
@@ -24,6 +25,7 @@ public class TestPhaseRunner {
    public TestPhaseRunner(int agentCount,
                           ItemContainer items, ContainerItemGenerator itemGenerator,
                           int batchSize) {
+       this.vectorSize = items.vectorSize();
         this.agentCount = agentCount;
         this.items = items;
         this.itemGenerator = itemGenerator;
@@ -36,7 +38,7 @@ public class TestPhaseRunner {
    {
        System.out.printf("runPhase('%s') for %d %s (vector: %d, %d agents, maxRPS: %d, ordered: %s)\n",
                phaseName, duration, durationUnit,
-               items.vectorSize(), agentCount, maxRPS, items.orderedInserts());
+               vectorSize, agentCount, maxRPS, items.orderedInserts());
        System.out.printf(" first, truncate container: ");
        // Let things settle a bit before, after truncation
        Thread.sleep(1000L);
