@@ -70,9 +70,7 @@ public class InsertManyTestClient
                 System.out.println("it does -- need to delete first");
                 dropContainer();
                 System.out.printf("%s deleted: will wait for 3 seconds...\n", containerDesc());
-                try {
-                    Thread.sleep(3000L);
-                } catch (InterruptedException e) { }
+                Thread.sleep(3000L);
             }
         } else {
             System.out.println("does not -- no need to delete");
