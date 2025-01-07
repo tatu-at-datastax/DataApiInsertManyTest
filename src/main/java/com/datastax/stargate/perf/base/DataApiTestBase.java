@@ -140,9 +140,10 @@ public abstract class DataApiTestBase
         }
 
         // Initialize...
-        System.out.printf("Initialize test client (%s):\n", containerDesc());
+        System.out.printf("Initialize test client (%s; skipInit? %s):\n",
+                containerDesc(), skipInit);
         try {
-            testClient.initialize(skipInit, true);
+            testClient.initialize(skipInit, createIndexes());
         } catch (Exception e) {
             System.err.printf("\n  FAIL/base3: (%s) %s\n", e.getClass().getName(),
                     e);
@@ -180,6 +181,8 @@ public abstract class DataApiTestBase
     protected String containerDesc() {
         return containerType.desc(containerName());
     }
+
+    protected abstract boolean createIndexes();
 
     protected abstract DataApiTestClient createTestClient(Database db) throws Exception;
 

@@ -17,4 +17,9 @@ public abstract class DataApiTableTestBase extends DataApiTestBase
     protected String containerName() {
         return tableName;
     }
+
+    @Override
+    protected boolean createIndexes() {
+        return true;
+    }
 }

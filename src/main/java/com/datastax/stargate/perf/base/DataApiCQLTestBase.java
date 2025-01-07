@@ -16,5 +16,10 @@ public abstract class DataApiCQLTestBase extends DataApiTestBase {
     protected String containerName() {
         return tableName;
     }
+
+    @Override
+    protected boolean createIndexes() {
+        return true;
+    }
 }
 

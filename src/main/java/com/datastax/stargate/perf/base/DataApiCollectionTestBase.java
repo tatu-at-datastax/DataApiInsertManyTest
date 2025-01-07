@@ -21,4 +21,9 @@ public abstract class DataApiCollectionTestBase extends DataApiTestBase
     protected String containerName() {
         return collectionName;
     }
+
+    @Override
+    protected boolean createIndexes() {
+        return addIndexes;
+    }
 }
