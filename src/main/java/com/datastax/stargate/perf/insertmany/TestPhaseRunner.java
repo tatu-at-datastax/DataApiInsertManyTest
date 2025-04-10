@@ -25,7 +25,7 @@ public class TestPhaseRunner {
    public TestPhaseRunner(int agentCount,
                           ItemContainer items, ContainerItemGenerator itemGenerator,
                           int batchSize) {
-       this.vectorSize = items.vectorSize();
+        this.vectorSize = items.vectorSize();
         this.agentCount = agentCount;
         this.items = items;
         this.itemGenerator = itemGenerator;
